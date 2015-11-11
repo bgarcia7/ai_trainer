@@ -29,26 +29,32 @@ class Personal_Trainer:
 
 		#=====[ Get data from python file and place in DataFrame ]=====
 		df = pd.DataFrame(data,columns=keys.columns)
-		self.squats.extend([(squat, label) for squat in ss.separate_squats(df, self.key)])
+		return [(squat, label) for squat in ss.separate_squats(df, self.key)]
+
+	def add_squats(self, squats):
+		self.squats.extend(squats)
 
 	#=====[ Provides the client with an array of squat DataFrames  ]=====
 	def get_squats(self):
 		return self.squats
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
-	def extract_features(self):
+	def extract_features(self, squats=None):
+
+		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
+		if squats is None:
+			squats = self.squats
 		
 		feature_vectors = []
 		labels = []
 		
 		#=====[ Extract features for each squat  ]=====
-		for squat in self.squats:
+		for squat in squats:
 			feature_vectors.append(fz.extract_basic(squat[0], self.key))
 			labels.append(squat[1])
 
-		#=====[ Create training set X ]=====
-		self.X = np.concatenate(feature_vectors,axis=0)
-		self.Y = np.array(labels)
+		#=====[ Return X, and y ]=====
+		return (np.concatenate(feature_vectors,axis=0), np.array(labels))
 
 	#=====[ Returns set of squats and extracted features  ]=====
 	def get_X(self):

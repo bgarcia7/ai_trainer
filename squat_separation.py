@@ -17,7 +17,7 @@ def in_new_squat(y_coords, height, index, delta):
 	return abs((y_coords[index] - height)/height) > delta
 	
 #=====[ Gets local maxes within accepted epsilon of global max and with max len(y_coors)/gamma maxes ]=====
-def get_local_mins(y_coords, epsilon=0.05, gamma=20, delta=0.5, beta=3):
+def get_local_mins(y_coords, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 		
 	local_mins = []
 	height = np.min(y_coords)
@@ -40,10 +40,10 @@ def get_local_mins(y_coords, epsilon=0.05, gamma=20, delta=0.5, beta=3):
 
 
 #=====[ Separates squats in a given dataframe based on changes in y-coord of specified column "key"  ]=====
-def separate_squats(df, key):
+def separate_squats(df, key, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 		
 	y_coords = [coord for coord in df[key]]
-	mins = get_local_mins(y_coords)
+	mins = get_local_mins(y_coords, epsilon, gamma, delta, beta)
 	squats = []
 
 	#=====[ Get points from DF between each max found -- constitutes a single squat ]=====

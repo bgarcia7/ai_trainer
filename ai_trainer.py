@@ -10,7 +10,8 @@ import squat_separation as ss
 import featurizer as fz
 
 #=====[ Import Data ]=====
-import coordKeys as keys
+import coordKeys as keysXY
+import coordKeysZ as keysXYZ
 
 
 class Personal_Trainer:
@@ -25,11 +26,16 @@ class Personal_Trainer:
 	#=====[ Does basic preprocessing for squats from data source: squat separation, normalization, etc. ]=====
 	#=====[ Takes data(an array of frames) and a label to be applied to each  ]=====
 	#=====[ THIS IS TO BE ALTERED TO ACCEPT AN ARRAY OF LABELS THAT IS OF EQUAL LENGTH TO DATA  ]=====
-	def analyze_squats(self, data, label, epsilon=0.05, gamma=20, delta=0.5, beta=1):
+	def analyze_squats(self, data, label, z_coords=False, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 
 		#=====[ Get data from python file and place in DataFrame ]=====
-		df = pd.DataFrame(data,columns=keys.columns)
-		return [(squat, label) for squat in ss.separate_squats(df, self.key)]
+		if not z_coords:
+			df = pd.DataFrame(data,columns=keysXY.columns)
+			return [(squat, label) for squat in ss.separate_squats(df, self.key)]
+		else:
+			df = pd.DataFrame(data,columns=keysXYZ.columns)
+			return [(squat, label) for squat in ss.separate_squats(df, self.key, z_coords)]
+
 
 	def add_squats(self, squats):
 		self.squats.extend(squats)

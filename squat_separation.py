@@ -40,9 +40,9 @@ def get_local_mins(y_coords, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 
 
 #=====[ Separates squats in a given dataframe based on changes in y-coord of specified column "key"  ]=====
-def separate_squats(df, key, epsilon=0.05, gamma=20, delta=0.5, beta=1):
+def separate_squats(df, key, z_coords=False, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 		
-	y_coords = [coord for coord in df[key]]
+	y_coords = df.get(key)
 	mins = get_local_mins(y_coords, epsilon, gamma, delta, beta)
 	squats = []
 
@@ -50,6 +50,7 @@ def separate_squats(df, key, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 	for index,x in enumerate(mins):
 		if(index == len(mins) -1 ):
 			continue
-		squats.append(df[x:mins[index+1]])
+		squat = (df.loc[x:mins[index+1]-1]).copy(True)
+		squats.append(squat.set_index([range(squat.shape[0])]))
 
-	return nz.normalize(squats)
+	return nz.normalize(df, squats, z_coords)

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import sys
+from sklearn import preprocessing
 
 sys.path.append('data')
 
@@ -60,7 +61,11 @@ class Personal_Trainer:
 			labels.append(squat[1])
 
 		#=====[ Return X, and y ]=====
-		return (np.concatenate(feature_vectors,axis=0), np.array(labels))
+		X = np.concatenate(feature_vectors,axis=0)
+		X = preprocessing.StandardScaler().fit_transform(X)
+		y = np.array(labels)
+
+		return X, y
 
 	#=====[ Returns set of squats and extracted features  ]=====
 	def get_X(self):

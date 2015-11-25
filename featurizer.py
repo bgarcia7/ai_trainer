@@ -62,10 +62,10 @@ def extract_basic(squat, key):
 #=====[ Extracts advanced features for a given squat - ASSUMES Z COORDINATES INCLUDED  ]=====
 
 def extract_stance_shoulder_width(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     states = [fset1, fset2, fset3, fset4]
 
@@ -81,10 +81,10 @@ def extract_stance_shoulder_width(squat, key, keys_to_indices):
     return np.concatenate([left_heels_shoulder_apart, right_heels_shoulder_apart],axis=1)
 
 def extract_stance_straightness(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     states = [fset1, fset2, fset3, fset4]
 
@@ -100,10 +100,10 @@ def extract_stance_straightness(squat, key, keys_to_indices):
     return np.concatenate([left_heels_under_shoulder, right_heels_under_shoulder],axis=1)
 
 def extract_feet(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     states = [fset1, fset2, fset3, fset4]
 
@@ -119,10 +119,10 @@ def extract_feet(squat, key, keys_to_indices):
     return np.concatenate([left_feet_flat, right_feet_flat],axis=1)
 
 def bend_hips_knees(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     states = [fset1, fset2, fset3, fset4]
 
@@ -179,10 +179,10 @@ def bend_hips_knees(squat, key, keys_to_indices):
     return np.concatenate([left_bend_knees, left_bend_hips, right_bend_knees, right_bend_hips, ratios],axis=1)
 
 def back_straight(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     states = [fset1, fset2, fset3, fset4]
 
@@ -203,10 +203,10 @@ def back_straight(squat, key, keys_to_indices):
     return np.array([variance, flat_line_offset])
 
 def head_aligned_back(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     states = [fset1, fset2, fset3, fset4]
 
@@ -227,7 +227,8 @@ def head_aligned_back(squat, key, keys_to_indices):
     return np.array([variance, flat_line_offset])
 
 def depth(squat, key, keys_to_indices):
-    fset3 = np.array(squat_position(squat,key))
+    fset3 = np.array(squat_position(squat,key))[0]
+
     left_depth = []
     right_depth = []
     # P12
@@ -244,10 +245,10 @@ def depth(squat, key, keys_to_indices):
     return np.array([depth_angle, left_hip_y, right_hip_y])
 
 def back_hip_angle(squat, key, keys_to_indices):
-    fset1 = np.array(starting_position(squat))
-    fset2 = np.array(start_to_squat(squat,key))
-    fset3 = np.array(squat_position(squat,key))
-    fset4 = np.array(squat_to_end(squat,key))
+    fset1 = np.array(starting_position(squat))[0]
+    fset2 = np.array(start_to_squat(squat,key))[0]
+    fset3 = np.array(squat_position(squat,key))[0]
+    fset4 = np.array(squat_to_end(squat,key))[0]
 
     bottom_frame = abs((fset3[keys_to_indices['NeckY']] - np.average([fset3[keys_to_indices['HipLeftY']], fset3[keys_to_indices['HipRightY']]])) / (fset3[keys_to_indices['NeckZ']] - np.average([fset3[keys_to_indices['HipLeftZ']], fset3[keys_to_indices['HipRightZ']]])))
     midpoint_frame_down = abs((fset2[keys_to_indices['NeckY']] - np.average([fset2[keys_to_indices['HipLeftY']], fset2[keys_to_indices['HipRightY']]])) / (fset2[keys_to_indices['NeckZ']] - np.average([fset2[keys_to_indices['HipLeftZ']], fset2[keys_to_indices['HipRightZ']]])))

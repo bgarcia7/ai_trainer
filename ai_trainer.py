@@ -93,7 +93,7 @@ class Personal_Trainer:
 		X = preprocessing.StandardScaler().fit_transform(X)
 		y = np.array(labels)
 
-		return X, y
+		return X, y, advanced_feature_vector
 
 	#=====[ Returns set of squats and extracted features  ]=====
 	def get_X(self):

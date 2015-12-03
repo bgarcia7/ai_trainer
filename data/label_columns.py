@@ -1,0 +1,1 @@
+columns = ['stance_width','stance_alignment','knees_over_toes','bend_hips_knees','back_straight','head_alignment','squat_depth','back_hip_angle']

@@ -4,6 +4,7 @@ import pickle
 import sys
 from sklearn import preprocessing
 from pprint import pprint
+from collections import defaultdict
 
 sys.path.append('data')
 
@@ -14,6 +15,7 @@ import featurizer as fz
 #=====[ Import Data ]=====
 import coordKeys as keysXY
 import coordKeysZ as keysXYZ
+import label_columns as feature_names
 
 class Personal_Trainer:
 
@@ -26,6 +28,12 @@ class Personal_Trainer:
 
 	def load_squats(self, file):
 		self.squats = pickle.load(open(file,"rb"))
+
+	def load_advanced_squats(self,file):
+		data = pickle.load(open(file,"rb"))
+		self.squats = data['X']
+		self.labels = data['Y']
+		self.file_names = data['file_names']
 
 	#=====[ Does basic preprocessing for squats from data source: squat separation, normalization, etc. ]=====
 	#=====[ Takes data(an array of frames) and a label to be applied to each  ]=====
@@ -54,7 +62,7 @@ class Personal_Trainer:
 		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
 		if squats is None:
 			squats = self.squats
-		
+
 		feature_vectors = []
 		labels = []
 		
@@ -63,37 +71,56 @@ class Personal_Trainer:
 			feature_vectors.append(fz.extract_basic(squat[0], self.key))
 			labels.append(squat[1])
 
-		advanced_labels = []
-		#=====[ Extract advanced features for each squat  ]=====
-
-		# CURRENTLY STORING IN DICT, PROBABLY NEED TO RESTRUCTURE LATER
-		advanced_feature_vector = {}
-		advanced_feature_vector['stance_shoulder_width'] = []
-		advanced_feature_vector['stance_straightness'] = []
-		advanced_feature_vector['feet'] = []
-		advanced_feature_vector['bend_hips_knees'] = []
-		advanced_feature_vector['back_straight'] = []
-		advanced_feature_vector['head_aligned_back'] = []
-		advanced_feature_vector['depth'] = []
-		advanced_feature_vector['back_hip_angle'] = []
-		for squat in squats:
-			advanced_feature_vector['stance_shoulder_width'].append(fz.extract_stance_shoulder_width(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['stance_straightness'].append(fz.extract_stance_straightness(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['feet'].append(fz.extract_feet(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['bend_hips_knees'].append(fz.bend_hips_knees(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['back_straight'].append(fz.back_straight(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['head_aligned_back'].append(fz.head_aligned_back(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['depth'].append(fz.depth(squat[0], self.key, self.keys_to_indices))
-			advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat[0], self.key, self.keys_to_indices))
-
-			# MISSING LABELS
-
 		#=====[ Return X, and y ]=====
 		X = np.concatenate(feature_vectors,axis=0)
 		X = preprocessing.StandardScaler().fit_transform(X)
 		y = np.array(labels)
 
-		return X, y, advanced_feature_vector
+		return X, y
+
+	def extract_advanced_features(self, squats=None, labels=None):
+
+		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
+		if squats is None:
+			squats = self.squats
+			labels = [self.labels[name] for name in self.labels]
+
+		#=====[ Initialize dict  ]=====
+		advanced_feature_vector = defaultdict(list)
+		
+		#=====[ Extract advanced features for each squat  ]=====
+		for squat in squats:
+			advanced_feature_vector['stance_width'].append(fz.extract_stance_shoulder_width(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['stance_alignment'].append(fz.extract_stance_straightness(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['knees_over_toes'].append(fz.extract_feet(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['bend_hips_knees'].append(fz.bend_hips_knees(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['back_straight'].append(fz.back_straight(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['head_alignment'].append(fz.head_aligned_back(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['squat_depth'].append(fz.depth(squat, self.key, self.keys_to_indices))
+			advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat, self.key, self.keys_to_indices))
+
+
+		#=====[ Return X, and y ]=====
+		X = {}
+		Y = {}
+
+		#=====[ Specify keys to ignore  ]=====
+		toIgnore = ['stance_width', 'back_straight','back_hip_angle']
+
+		for index, feature in enumerate(advanced_feature_vector):
+			training_data = np.array([training_example for training_example in advanced_feature_vector[feature]])
+		
+			#=====[ Try to fit_transform data, print feature name if fail  ]=====
+			try:
+				if feature not in toIgnore:
+					X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
+					Y[feature] = labels[index]	    
+			except Exception as e:	        
+				print e, feature
+		
+		return X, Y, self.file_names
+
+
 
 	#=====[ Returns set of squats and extracted features  ]=====
 	def get_X(self):

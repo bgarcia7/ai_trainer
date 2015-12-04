@@ -26,10 +26,7 @@ class Personal_Trainer:
 		for i, key in enumerate(keysXYZ.columns):
 			self.keys_to_indices[key] = i
 
-	def load_squats(self, file):
-		self.squats = pickle.load(open(file,"rb"))
-
-	def load_advanced_squats(self,file):
+	def load_squats(self,file):
 		data = pickle.load(open(file,"rb"))
 		self.squats = data['X']
 		self.labels = data['Y']
@@ -38,23 +35,31 @@ class Personal_Trainer:
 	#=====[ Does basic preprocessing for squats from data source: squat separation, normalization, etc. ]=====
 	#=====[ Takes data(an array of frames) and a label to be applied to each  ]=====
 	#=====[ THIS IS TO BE ALTERED TO ACCEPT AN ARRAY OF LABELS THAT IS OF EQUAL LENGTH TO DATA  ]=====
-	def analyze_squats(self, data, label, z_coords=False, epsilon=0.05, gamma=20, delta=0.5, beta=1):
+	def analyze_squats(self, data, labels, z_coords=False, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 
 		#=====[ Get data from python file and place in DataFrame ]=====
 		if not z_coords:
 			df = pd.DataFrame(data,columns=keysXY.columns)
-			return [(squat, label) for squat in ss.separate_squats(df, self.key)]
+			return [(squat, labels) for squat in ss.separate_squats(df, self.key)]
 		else:
 			df = pd.DataFrame(data,columns=keysXYZ.columns)
-			return [(squat, label) for squat in ss.separate_squats(df, self.key, z_coords)]
+			return [(squat, labels) for squat in ss.separate_squats(df, self.key, z_coords)]
 
-
+	#=====[ Adds squats to personal trainer's list of squats  ]=====
 	def add_squats(self, squats):
 		self.squats.extend(squats)
 
 	#=====[ Provides the client with an array of squat DataFrames  ]=====
 	def get_squats(self):
 		return self.squats
+
+	#=====[ Provides the client with a DataFrame of squat labels  ]=====
+	def get_labels(self):
+		return self.labels
+
+	#=====[ Provides the client with an array of squat DataFrames  ]=====
+	def get_file_names(self):
+		return self.file_names
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
 	def extract_features(self, squats=None):
@@ -78,7 +83,8 @@ class Personal_Trainer:
 
 		return X, y
 
-	def extract_advanced_features(self, squats=None, labels=None):
+	#=====[ Extracts advanced features from squats and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
+	def extract_advanced_features(self, squats=None, labels=None, toIgnore=None):
 
 		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
 		if squats is None:
@@ -99,13 +105,9 @@ class Personal_Trainer:
 			advanced_feature_vector['squat_depth'].append(fz.depth(squat, self.key, self.keys_to_indices))
 			advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat, self.key, self.keys_to_indices))
 
-
 		#=====[ Return X, and y ]=====
 		X = {}
 		Y = {}
-
-		#=====[ Specify keys to ignore  ]=====
-		toIgnore = ['stance_width', 'back_straight','back_hip_angle']
 
 		for index, feature in enumerate(advanced_feature_vector):
 			training_data = np.array([training_example for training_example in advanced_feature_vector[feature]])
@@ -120,14 +122,11 @@ class Personal_Trainer:
 		
 		return X, Y, self.file_names
 
+	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
+	def extract_all_advanced_features(self, squats=None, labels=None, toIgnore=None):
+		
+		X, Y, file_names = self.extract_advanced_features(squats, labels, toIgnore)
 
-
-	#=====[ Returns set of squats and extracted features  ]=====
-	def get_X(self):
-		return self.X
-
-	#=====[ Returns labels for squats  ]=====
-	def get_Y(self):
-		return self.Y
+		return np.concatenate([X[x] for x in X],axis=1), Y, file_names
 
 

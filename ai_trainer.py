@@ -26,6 +26,9 @@ class Personal_Trainer:
 		for i, key in enumerate(keysXYZ.columns):
 			self.keys_to_indices[key] = i
 
+	def get_keys_to_indices(self):
+		return self.keys_to_indices
+
 	def load_squats(self,file):
 		data = pickle.load(open(file,"rb"))
 		self.squats = data['X']
@@ -96,14 +99,15 @@ class Personal_Trainer:
 		
 		#=====[ Extract advanced features for each squat  ]=====
 		for squat in squats:
-			advanced_feature_vector['stance_width'].append(fz.extract_stance_shoulder_width(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['stance_alignment'].append(fz.extract_stance_straightness(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['knees_over_toes'].append(fz.extract_feet(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['bend_hips_knees'].append(fz.bend_hips_knees(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['back_straight'].append(fz.back_straight(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['head_alignment'].append(fz.head_aligned_back(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['squat_depth'].append(fz.depth(squat, self.key, self.keys_to_indices))
-			advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat, self.key, self.keys_to_indices))
+			squat = fz.get_states(squat,self.key)
+			advanced_feature_vector['stance_width'].append(fz.stance_shoulder_width(squat))
+			advanced_feature_vector['stance_alignment'].append(fz.stance_straightness(squat))
+			advanced_feature_vector['knees_over_toes'].append(fz.knees_over_toes(squat))
+			advanced_feature_vector['bend_hips_knees'].append(fz.bend_hips_knees(squat))
+			advanced_feature_vector['back_straight'].append(fz.back_straight(squat))
+			advanced_feature_vector['head_alignment'].append(fz.head_aligned_back(squat))
+			advanced_feature_vector['squat_depth'].append(fz.depth(squat))
+			advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat))
 
 		#=====[ Return X, and y ]=====
 		X = {}
@@ -121,7 +125,7 @@ class Personal_Trainer:
 
 				print e, feature
 		
-		return X, Y, self.file_names, advanced_feature_vector
+		return X, Y, self.file_names, advanced_feature_vector	
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
 	def extract_all_advanced_features(self, squats=None, labels=None, toIgnore=None):

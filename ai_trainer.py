@@ -117,10 +117,11 @@ class Personal_Trainer:
 				if feature not in toIgnore:
 					X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
 					Y[feature] = labels[index]	    
-			except Exception as e:	        
+			except Exception as e:
+
 				print e, feature
 		
-		return X, Y, self.file_names
+		return X, Y, self.file_names, advanced_feature_vector
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
 	def extract_all_advanced_features(self, squats=None, labels=None, toIgnore=None):

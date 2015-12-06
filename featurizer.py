@@ -200,7 +200,9 @@ def back_straight(squat, key, keys_to_indices):
     avg = np.average(back_angles)
     variance = map(lambda x : (x - avg)**2, back_angles)
     flat_line_offset = abs(avg - 180)
-    return np.array([variance, flat_line_offset])
+    variance.append(flat_line_offset)
+    return np.array(variance)
+    # return np.concatenate([variance, flat_line_offset],axis=1)
 
 def head_aligned_back(squat, key, keys_to_indices):
     fset1 = np.array(starting_position(squat))[0]
@@ -224,7 +226,9 @@ def head_aligned_back(squat, key, keys_to_indices):
     avg = np.average(head_angles)
     variance = map(lambda x : (x - avg)**2, head_angles)
     flat_line_offset = abs(avg - 180)
-    return np.array([variance, flat_line_offset])
+    variance.append(flat_line_offset)
+    return np.array(variance)
+    # return np.concatenate([variance, flat_line_offset],axis=1)
 
 def depth(squat, key, keys_to_indices):
     fset3 = np.array(squat_position(squat,key))[0]

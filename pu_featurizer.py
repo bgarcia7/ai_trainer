@@ -48,19 +48,15 @@ def pushup_to_end(pushup):
 #     return np.concatenate([fset1,fset2,fset3,fset4],axis=1)
 
 #=====[ Extracts advanced features for a given pushup ]=====
+def direction_substring(dir_bool):
+    if dir_bool:
+        return 'Right'
+    else:
+        return 'Left'
+
 def head_in_line_with_back(states):
 
-    neck_angles = []
-    for state in states:
-        # P12
-        spine_shoulder_mid = math.sqrt(math.pow(state['SpineShoulderY'] - state['SpineMidY'], 2) + math.pow(state['SpineShoulderX'] - state['SpineMidX'], 2))
-        # P13
-        spine_shoulder_neck = math.sqrt(math.pow(state['SpineShoulderY'] - state['NeckY'], 2) + math.pow(state['SpineShoulderX'] - state['NeckX'], 2))
-        # P23
-        spine_mid_neck = math.sqrt(math.pow(state['SpineMidY'] - state['NeckY'], 2) + math.pow(state['SpineMidX'] - state['NeckX'], 2))
-        spine_neck_angle = math.acos((math.pow(spine_shoulder_mid, 2) + math.pow(spine_shoulder_neck, 2) - math.pow(spine_mid_neck, 2)) / (2 * spine_shoulder_mid * spine_shoulder_neck))
-        neck_angles.append(spine_neck_angle)
-
+    neck_angles = [get_angle(state, 'SpineMid','SpineShoulder','Neck','X','Y') for state in states]
     avg = np.average(neck_angles)
     variance = map(lambda x : (x - avg)**2, neck_angles)
     flat_line_offset = abs(avg - 180)
@@ -68,18 +64,7 @@ def head_in_line_with_back(states):
     return np.array(variance)
 
 def back_straight(states):
-
-    back_angles = []
-    for state in states:
-        # P12
-        spine_mid_base = math.sqrt(math.pow(state['SpineMidY'] - state['SpineBaseY'], 2) + math.pow(state['SpineMidX'] - state['SpineBaseX'], 2))
-        # P13
-        spine_mid_shoulder = math.sqrt(math.pow(state['SpineMidY'] - state['SpineShoulderY'], 2) + math.pow(state['SpineMidX'] - state['SpineShoulderX'], 2))
-        # P23
-        spine_base_shoulder = math.sqrt(math.pow(state['SpineBaseY'] - state['SpineShoulderY'], 2) + math.pow(state['SpineBaseX'] - state['SpineShoulderX'], 2))
-        spine_mid_angle = math.acos((math.pow(spine_mid_base, 2) + math.pow(spine_mid_shoulder, 2) - math.pow(spine_base_shoulder, 2)) / (2 * spine_mid_base * spine_mid_shoulder))
-        back_angles.append(spine_mid_angle)
-
+    back_angles = [get_angle(state, 'SpineBase','SpineMid','SpineShoulder','X','Y') for state in states]
     avg = np.average(back_angles)
     variance = map(lambda x : (x - avg)**2, back_angles)
     flat_line_offset = abs(avg - 180)
@@ -89,23 +74,28 @@ def back_straight(states):
     return np.array(variance)
 
 # W.R.T side facing kinect
-def knees_straight(states, direction):
-    
-    
-    # knee_angles = []
-    # for state in states:
-    #     # P12
-    #     spine_shoulder_mid = math.sqrt(math.pow(state['SpineShoulderY'] - state['SpineMidY'], 2) + math.pow(state['SpineShoulderX'] - state['SpineMidX'], 2))
-    #     # P13
-    #     spine_shoulder_neck = math.sqrt(math.pow(state['SpineShoulderY'] - state['NeckY'], 2) + math.pow(state['SpineShoulderX'] - state['NeckX'], 2))
-    #     # P23
-    #     spine_mid_neck = math.sqrt(math.pow(state['SpineMidY'] - state['NeckY'], 2) + math.pow(state['SpineMidX'] - state['NeckX'], 2))
-    #     spine_neck_angle = math.acos((math.pow(spine_shoulder_mid, 2) + math.pow(spine_shoulder_neck, 2) - math.pow(spine_mid_neck, 2)) / (2 * spine_shoulder_mid * spine_shoulder_neck))
-    #     neck_angles.append(spine_neck_angle)
+def knees_straight(states, rightward):
+    knee_angles = [get_angle(state, 'Hip' + direction_substring(rightward), 'Knee' + direction_substring(rightward), 'Foot' + direction_substring(rightward), 'X', 'Y') for state in states]
+    avg = np.average(knee_angles)
+    variance = map(lambda x : (x - avg)**2, knee_angles)
+    flat_line_offset = abs(avg - 180)
+    variance.append(flat_line_offset)
+    return np.array(variance)
 
-    # avg = np.average(neck_angles)
-    # variance = map(lambda x : (x - avg)**2, neck_angles)
-    # flat_line_offset = abs(avg - 180)
-    # variance.append(flat_line_offset)
-    # return np.array(variance)
+def elbow_angle(states, rightward):
+    elbow_angles = [get_angle(state, 'Shoulder' + direction_substring(rightward), 'Elbow' + direction_substring(rightward), 'Hand' + direction_substring(rightward), 'Y', 'Z') for state in states]
+    avg = np.average(elbow_angles)
+    variance = map(lambda x : (x - avg)**2, elbow_angles)
+    flat_line_offset = abs(avg - 180)
+    variance.append(flat_line_offset)
+    return np.array(variance)
+
+def hands_aligned_chest(states, rightward):
+    shoulder_hand_diffs = [state['Shoulder' + direction_substring(rightward) + 'X'] - state['Hand' + direction_substring(rightward) + 'X'] for state in states]
+    frame_diffs = []
+    bottom_frame = 0
+    top_frame = 3
+    frame_diffs.append(states[bottom_frame]['Shoulder' + direction_substring(rightward) + 'X'] - states[bottom_frame]['Hand' + direction_substring(rightward) + 'X'])
+    frame_diffs.append(states[top_frame]['Shoulder' + direction_substring(rightward) + 'X'] - states[top_frame]['Hand' + direction_substring(rightward) + 'X'])
+    return np.concatenate([shoulder_hand_diffs, frame_diffs],axis=1)
 

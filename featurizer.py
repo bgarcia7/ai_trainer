@@ -149,11 +149,12 @@ def back_straight(states):
 
     #=====[ Gets average and variance  ]=====
     avg = np.average(back_angles)
-    variance = map(lambda x : (x - avg)**2, back_angles)
+    features = []
+    variance = sum(map(lambda x : (x - avg)**2, back_angles))
+    features.append(variance)
+    features.append(avg)
 
-    variance.append(avg)
-
-    return np.array(variance)
+    return np.array(features)
 
 #=====[ Extracts features to determine if the head and back are aligned  ]=====
 def head_aligned_back(states):
@@ -162,8 +163,10 @@ def head_aligned_back(states):
 
     #=====[ Gets average and variance  ]=====
     avg = np.average(head_angles)
-    variance = map(lambda x : (x - avg)**2, head_angles)
-    variance.append(avg)
+    features = []
+    variance = sum(map(lambda x : (x - avg)**2, head_angles))
+    features.append(variance)
+    features.append(avg)
 
     return np.array(variance)
 

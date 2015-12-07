@@ -55,50 +55,64 @@ def direction_substring(dir_bool):
         return 'Left'
 
 def head_in_line_with_back(states):
-
+    assert len(states) > 0
     neck_angles = [get_angle(state, 'SpineMid','SpineShoulder','Neck','X','Y') for state in states]
+
+    #=====[ Gets average, variance, and the flat line offset of the average ]=====
     avg = np.average(neck_angles)
     features = []
-    variance = sum(map(lambda x : (x - avg)**2, neck_angles))
+    variance = sum(map(lambda x : (x - avg)**2, neck_angles)) / len(neck_angles)
     flat_line_offset = abs(avg - 180)
+    features.append(avg)
     features.append(variance)
     features.append(flat_line_offset)
+
     return np.array(features)
 
 def back_straight(states):
+    assert len(states) > 0
     back_angles = [get_angle(state, 'SpineBase','SpineMid','SpineShoulder','X','Y') for state in states]
+
+    #=====[ Gets average, variance, flat line offset, and first & last angles]=====
     avg = np.average(back_angles)
     features = []
-    variance = sum(map(lambda x : (x - avg)**2, back_angles))
+    variance = sum(map(lambda x : (x - avg)**2, back_angles)) / len(back_angles)
     flat_line_offset = abs(avg - 180)
+    features.append(avg)
     features.append(variance)
     features.append(flat_line_offset)
+    features.append(back_angles[0])
+    features.append(back_angles[-1])
 
-    top_frame = 0
-    bottom_frame = 2
-    features.append(back_angles[top_frame])
-    features.append(back_angles[bottom_frame])
     return np.array(features)
 
 # W.R.T side facing kinect
 def knees_straight(states, rightward):
+    assert len(states) > 0
     knee_angles = [get_angle(state, 'Hip' + direction_substring(rightward), 'Knee' + direction_substring(rightward), 'Foot' + direction_substring(rightward), 'X', 'Y') for state in states]
+
+    #=====[ Gets average, variance, and flat line offset ]=====
     avg = np.average(knee_angles)
     features = []
-    variance = sum(map(lambda x : (x - avg)**2, knee_angles))
+    variance = sum(map(lambda x : (x - avg)**2, knee_angles)) / len(knee_angles)
     flat_line_offset = abs(avg - 180)
     features.append(variance)
     features.append(flat_line_offset)
+
     return np.array(features)
 
 def elbow_angle(states, rightward):
+    assert len(states) > 0
     elbow_angles = [get_angle(state, 'Shoulder' + direction_substring(rightward), 'Elbow' + direction_substring(rightward), 'Hand' + direction_substring(rightward), 'Y', 'Z') for state in states]
+
+    #=====[ Gets average, variance, and flat line offset ]=====
     avg = np.average(elbow_angles)
     features = []
-    variance = sum(map(lambda x : (x - avg)**2, elbow_angles))
+    variance = sum(map(lambda x : (x - avg)**2, elbow_angles)) / len(elbow_angles)
     flat_line_offset = abs(avg - 180)
     features.append(variance)
     features.append(flat_line_offset)
+
     return np.array(features)
 
 def hands_aligned_chest(states, rightward):

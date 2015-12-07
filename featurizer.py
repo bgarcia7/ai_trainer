@@ -90,8 +90,8 @@ def get_states(squat, key):
 
 #=====[ Extracts four basic sets of features for a given squat and concatenates them  ]=====
 def extract_basic(squat, key):
-	
-	return np.concatenate(get_states(squat,key),axis=1)
+    
+    return np.concatenate(get_states(squat,key),axis=1)
 
 
 #############################################################################################
@@ -144,13 +144,13 @@ def bend_hips_knees(states):
 
 #=====[ Extracts features to determine if the back is straight throughout the squat  ]=====
 def back_straight(states):
-
+    assert len(states) > 0
     back_angles = [get_angle(state,'SpineBase','SpineMid','SpineShoulder','Y','Z') for state in states]
 
     #=====[ Gets average and variance  ]=====
     avg = np.average(back_angles)
     features = []
-    variance = sum(map(lambda x : (x - avg)**2, back_angles))
+    variance = sum(map(lambda x : (x - avg)**2, back_angles)) / len(back_angles)
     features.append(variance)
     features.append(avg)
 
@@ -158,17 +158,17 @@ def back_straight(states):
 
 #=====[ Extracts features to determine if the head and back are aligned  ]=====
 def head_aligned_back(states):
-
+    assert len(states) > 0
     head_angles = [get_angle(state,'Head','Neck','SpineShoulder','Y','Z') for state in states]
 
     #=====[ Gets average and variance  ]=====
     avg = np.average(head_angles)
     features = []
-    variance = sum(map(lambda x : (x - avg)**2, head_angles))
+    variance = sum(map(lambda x : (x - avg)**2, head_angles)) / len(head_angles)
     features.append(variance)
     features.append(avg)
 
-    return np.array(variance)
+    return np.array(features)
 
 #=====[ Extracts features to determine if the squat is deep enough  ]=====
 def depth(states):

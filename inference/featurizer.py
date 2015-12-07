@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
+from collections import defaultdict
 
 #======[ Returns index to frame with minimum y-coord for specified key ]=====
 def get_min(squat,key):   
@@ -91,31 +92,49 @@ def get_states(squat, key):
 #=====[ Extracts four basic sets of features for a given squat and concatenates them  ]=====
 def extract_basic(squat, key):
     
-    return np.concatenate(get_states(squat,key),axis=1)
+    return np.concatenate(get_states(squat,key))
 
 
 #############################################################################################
 ####### Extracts advanced features for a given squat - ASSUMES Z COORDINATES INCLUDED  ######
 #############################################################################################
 
+def get_advanced_feature_vector(squats, key):
+    #=====[ Initialize dict  ]=====
+    advanced_feature_vector = defaultdict(list)
+    
+    #=====[ Extract advanced features for each squat  ]=====
+    for squat in squats:
+        squat = get_states(squat,key)
+        advanced_feature_vector['stance_width'].append(stance_shoulder_width(squat))
+        advanced_feature_vector['stance_alignment'].append(stance_straightness(squat))
+        advanced_feature_vector['knees_over_toes'].append(knees_over_toes(squat))
+        advanced_feature_vector['bend_hips_knees'].append(bend_hips_knees(squat))
+        advanced_feature_vector['back_straight'].append(back_straight(squat))
+        advanced_feature_vector['head_alignment'].append(head_aligned_back(squat))
+        advanced_feature_vector['squat_depth'].append(depth(squat))
+        # advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat))
+
+    return advanced_feature_vector
+
 #=====[ Extracts features for determining whether feet are shoulder width apart  ]=====
 def stance_shoulder_width(states):
    
     #=====[ Checks distance between heels and shoulsers in all frames ]=====
-    left_heels_shoulder_apart = [state['AnkleLeftX'] - state['ShoulderLeftX']for state in states]
-    right_heels_shoulder_apart = [state['AnkleRightX'] - state['ShoulderRightX'] for state in states]
+    left_heels_shoulder_apart = [float(state['AnkleLeftX'] - state['ShoulderLeftX']) for state in states]
+    right_heels_shoulder_apart = [float(state['AnkleRightX'] - state['ShoulderRightX']) for state in states]
     
-    return np.concatenate([left_heels_shoulder_apart, right_heels_shoulder_apart],axis=1)
+    return np.concatenate([left_heels_shoulder_apart, right_heels_shoulder_apart])
 
 #=====[ Extracts features for determining whether shoulders are directly over ankles  ]=====
 def stance_straightness(states):
     
     #=====[ Checks to make sure left heels directly under shoulder in all states ]=====
-    left_heels_under_shoulder =[state['AnkleLeftZ'] - state['ShoulderLeftZ'] for state in states]
+    left_heels_under_shoulder =[float(state['AnkleLeftZ'] - state['ShoulderLeftZ']) for state in states]
 
     #=====[ Checks to make sure right heels directly under shoulder in all states  ]=====
-    right_heels_under_shoulder = [state['AnkleRightZ'] - state['ShoulderRightZ'] for state in states]
-    return np.concatenate([left_heels_under_shoulder, right_heels_under_shoulder],axis=1)
+    right_heels_under_shoulder = [float(state['AnkleRightZ'] - state['ShoulderRightZ']) for state in states]
+    return np.concatenate([left_heels_under_shoulder, right_heels_under_shoulder])
 
 
 #=====[ Extracts features to determine if the knees are going past the toes (and possibly heels lifitng up)  ]=====
@@ -125,7 +144,7 @@ def knees_over_toes(states):
     left_feet_flat = [math.pow(state['KneeLeftZ'] - state['AnkleLeftZ'], 2) for state in states]
     right_feet_flat = [math.pow(state['KneeRightZ'] - state['AnkleRightZ'], 2) for state in states]
     
-    return np.concatenate([left_feet_flat, right_feet_flat],axis=1)
+    return np.concatenate([left_feet_flat, right_feet_flat])
 
 
 #=====[ Extracts features to determine if the hips and knees are simultaneously bending  ]=====
@@ -137,9 +156,9 @@ def bend_hips_knees(states):
     right_bend_knees = [get_angle(state,'AnkleRight','KneeRight','HipRight','Y','Z') for state in states]
     right_bend_hips = [get_angle(state,'SpineMid','HipRight','KneeRight','Y','Z') for state in states]
 
-    ratios = np.concatenate([get_angle_changes(left_bend_hips,left_bend_knees),get_angle_changes(right_bend_hips,right_bend_knees)],axis=1)
+    ratios = np.concatenate([get_angle_changes(left_bend_hips,left_bend_knees),get_angle_changes(right_bend_hips,right_bend_knees)])
     
-    return np.concatenate([left_bend_knees, left_bend_hips, right_bend_knees, right_bend_hips, ratios],axis=1)
+    return np.concatenate([left_bend_knees, left_bend_hips, right_bend_knees, right_bend_hips, ratios])
 
 
 #=====[ Extracts features to determine if the back is straight throughout the squat  ]=====
@@ -186,7 +205,7 @@ def back_hip_angle(states):
     slopes = []
     
     for state in states:
-        slopes.append(abs(state['NeckY'] - np.average([state['HipLeftY'], state['HipRightY']])) / (state['NeckZ'] - np.average([state['HipLeftZ'], state['HipRightZ']])))
+        slopes.append(abs(float(state['NeckY'] - np.average([state['HipLeftY'], state['HipRightY']]))) / float(state['NeckZ'] - np.average([state['HipLeftZ'], state['HipRightZ']])))
         
     return np.array(slopes)
 

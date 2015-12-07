@@ -89,7 +89,7 @@ class Personal_Trainer:
 		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
 		if squats is None:
 			squats = self.squats
-			labels = [self.labels[name] for name in self.labels]
+			labels = self.labels
 
 		#=====[ Get Feature Vector ]=====
 		advanced_feature_vector = fz.get_advanced_feature_vector(squats,self.key)
@@ -98,14 +98,14 @@ class Personal_Trainer:
 		X = {}
 		Y = {}
 
-		for index, feature in enumerate(advanced_feature_vector):
+		for feature in advanced_feature_vector:
 			training_data = np.array([training_example for training_example in advanced_feature_vector[feature]])
 		
 			#=====[ Try to fit_transform data, print feature name if fail  ]=====
 			try:
 				if feature not in toIgnore:
 					X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
-					Y[feature] = labels[index]	    
+					Y[feature] = labels[feature]	    
 			except Exception as e:
 				print e, feature
 		

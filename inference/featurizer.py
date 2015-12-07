@@ -113,7 +113,7 @@ def get_advanced_feature_vector(squats, key):
         advanced_feature_vector['back_straight'].append(back_straight(squat))
         advanced_feature_vector['head_alignment'].append(head_aligned_back(squat))
         advanced_feature_vector['squat_depth'].append(depth(squat))
-        # advanced_feature_vector['back_hip_angle'].append(fz.back_hip_angle(squat))
+        advanced_feature_vector['back_hip_angle'].append(back_hip_angle(squat))
 
     return advanced_feature_vector
 
@@ -205,7 +205,7 @@ def back_hip_angle(states):
     slopes = []
     
     for state in states:
-        slopes.append(abs(float(state['NeckY'] - np.average([state['HipLeftY'], state['HipRightY']]))) / float(state['NeckZ'] - np.average([state['HipLeftZ'], state['HipRightZ']])))
+        slopes.append(abs(float(state['NeckY']) - float(np.average([float(state['HipLeftY']), float(state['HipRightY'])]))) / float(state['NeckZ'] - np.average([float(state['HipLeftZ']), float(state['HipRightZ'])])))
         
     return np.array(slopes)
 

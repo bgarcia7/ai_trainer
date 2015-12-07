@@ -36,6 +36,7 @@ def get_classifiers(trainer):
 				accuracy = rnd_prediction(X, Y[key], file_names, classifier)
 				
 				#=====[ If accuracy of current classifier higher than score we've seen so far, update selected_classifier  ]=====
+				print key, accuracy, score
 				if accuracy > score:
 					score = accuracy
 					selected_classifiers[key] = classifier()

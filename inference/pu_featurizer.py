@@ -26,7 +26,7 @@ def get_midpoint(pushup,start,key):
     deltas = [(np.abs(true_mid - (pushup.iloc[end][key] - pushup.iloc[index][key])), index) for index in range(start,end)]
     return min(deltas)[1]
 
-def starting_position_pushup(pushup):
+def starting_position(pushup):
     return pushup.iloc[[1]]
 
 def start_to_pushup(pushup):
@@ -36,16 +36,22 @@ def pushup_position(pushup):
     return pushup.iloc[[get_min(pushup,key)]]
 
 def pushup_to_end(pushup):
-    return None
+    return pushup.iloc[[get_midpoint(pushup,start=0,key=key)]]
+
+#=====[ Returns states to use for feature extraction  ]=====
+def get_states(pushup, key):
+    
+    states = []
+    states.append(starting_position(pushup))
+    states.append(start_to_pushup(pushup,key))
+    states.append(pushup_position(pushup,key))
+    states.append(pushup_to_end(pushup,key))
+    
+    return states
 
 #=====[ Extracts four basic sets of features for a given pushup and concatenates them  ]=====
-# def extract_basic_pushup(states):
-#     fset1 = np.array(starting_position_pushup(squat))
-#     fset2 = np.array(start_to_pushup(squat,key))
-#     fset3 = np.array(pushup_position(squat,key))
-#     fset4 = np.array(pushup_to_end(squat,key))
-    
-#     return np.concatenate([fset1,fset2,fset3,fset4],axis=1)
+def extract_basic(pushup, key):
+    return np.concatenate(get_states(pushup,key),axis=1)
 
 #=====[ Extracts advanced features for a given pushup ]=====
 def avf(angles):

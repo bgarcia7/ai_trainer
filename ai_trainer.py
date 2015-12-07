@@ -7,6 +7,7 @@ from pprint import pprint
 from collections import defaultdict
 
 sys.path.append('data')
+sys.path.append('inference')
 
 #=====[ Import our utils  ]=====
 import squat_separation as ss
@@ -22,12 +23,7 @@ class Personal_Trainer:
 	def __init__(self, key):
 		self.key = key
 		self.squats = []
-		self.keys_to_indices = {}
-		for i, key in enumerate(keysXYZ.columns):
-			self.keys_to_indices[key] = i
 
-	def get_keys_to_indices(self):
-		return self.keys_to_indices
 
 	def load_squats(self,file):
 		data = pickle.load(open(file,"rb"))
@@ -35,9 +31,8 @@ class Personal_Trainer:
 		self.labels = data['Y']
 		self.file_names = data['file_names']
 
+
 	#=====[ Does basic preprocessing for squats from data source: squat separation, normalization, etc. ]=====
-	#=====[ Takes data(an array of frames) and a label to be applied to each  ]=====
-	#=====[ THIS IS TO BE ALTERED TO ACCEPT AN ARRAY OF LABELS THAT IS OF EQUAL LENGTH TO DATA  ]=====
 	def analyze_squats(self, data, labels, z_coords=False, epsilon=0.05, gamma=20, delta=0.5, beta=1):
 
 		#=====[ Get data from python file and place in DataFrame ]=====
@@ -63,6 +58,14 @@ class Personal_Trainer:
 	#=====[ Provides the client with an array of squat DataFrames  ]=====
 	def get_file_names(self):
 		return self.file_names
+
+	#=====[ Sets classifiers for the personal trainer  ]=====
+	def set_classifiers(self, classifiers):
+		self.classifiers = classifiers
+
+	#=====[ Classies an example based on a specified key  ]=====
+	def classify(self, key, X):
+		return self.classifiers[key].predict(X)
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
 	def extract_features(self, squats=None):
@@ -122,10 +125,9 @@ class Personal_Trainer:
 					X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
 					Y[feature] = labels[index]	    
 			except Exception as e:
-
 				print e, feature
 		
-		return X, Y, self.file_names, advanced_feature_vector	
+		return X, Y, self.file_names	
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
 	def extract_all_advanced_features(self, squats=None, labels=None, toIgnore=None):

@@ -58,11 +58,8 @@ class Personal_Trainer:
 
 	#=====[ Classies an example based on a specified key  ]=====
 	def classify(self, key, X):
-		try:
-			print self.classifiers[key].classes_
-		except:
-			print "Could not print classes"
-		print self.classifiers[key].predict(X)
+		return self.classifiers[key].predict(X)
+		
 		#=====[ THIS SHOULD BE A RETURN self.classifiers... etc  ]=====
 
 	def get_classifiers(self):

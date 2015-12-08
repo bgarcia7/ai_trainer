@@ -18,10 +18,10 @@ def in_new_squat(y_coords, height, index, delta):
 	return abs((y_coords[index] - height)/height) > delta
 	
 #=====[ Gets local maxes within accepted epsilon of global max and with max len(y_coors)/gamma maxes ]=====
-def get_local_mins(y_coords, epsilon=0.05, gamma=20, delta=0.5, beta=1):
+def get_local_mins(y_coords, epsilon=0.25, gamma=20, delta=0.5, beta=1):
 		
 	local_mins = []
-	height = np.min(y_coords)
+	height = np.min(y_coords[len(y_coords)/3:len(y_coords)*2/3])
 	gradient = np.gradient(y_coords)
 		
 	#=====[ Checks gradients to make sure  ]=====
@@ -57,7 +57,8 @@ def separate_squats(data_file, key, column_labels, epsilon=0.15, gamma=20, delta
 		data = []
 
 		#=====[ Format each line of data  ]=====
-		with open(os.path.join('data/raw_data/squat_pushupData_10to20',data_file)) as f:
+		# os.path.join('data/raw_data/squat_pushupData_10to20',
+		with open(data_file) as f:
 			for line in f:
 				try:
 					data.append([float(x.replace('\r\n','')) for x in line.split(',')])
@@ -80,7 +81,7 @@ def separate_squats(data_file, key, column_labels, epsilon=0.15, gamma=20, delta
 			squat = (df.loc[x:mins[index+1]-1]).copy(True)
 			squats.append(squat.set_index([range(squat.shape[0])]))
 
-		if len(squats) > 2:
+		if len(squats) > 1:
 			break
 
 	return nz.normalize(df, squats)

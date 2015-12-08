@@ -21,7 +21,7 @@ from collections import defaultdict
 def train_classifiers(trainer):
 
 	#=====[ Instantiates classifiers for each component of the squat  ]=====
-	classifiers = {'bend_hips_knees': tree.DecisionTreeClassifier(min_samples_split=3, criterion="entropy"), 'stance_width': linear_model.LogisticRegression(penalty='l1'),'squat_depth': linear_model.LogisticRegression(penalty='l1'),'knees_over_toes': tree.DecisionTreeClassifier(min_samples_split= 5, criterion="entropy"),'back_hip_angle': linear_model.LogisticRegression()}
+	classifiers = {'bend_hips_knees': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"), 'stance_width': linear_model.LogisticRegression(penalty='l1'),'squat_depth': linear_model.LogisticRegression(penalty='l1'),'knees_over_toes': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"),'back_hip_angle': linear_model.LogisticRegression()}
 
 	#=====[ Retreives relevant training data for each classifier  ]=====
 	X0, Y, file_names = trainer.extract_advanced_features(multiples=[0.5])

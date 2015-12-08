@@ -73,9 +73,10 @@ def head_in_line_with_back(states):
     features = avf(neck_angles)
     return np.array(features)
 
-def back_straight(states):
+# W.R.T side facing kinect
+def back_straight(states, rightward):
     assert len(states) > 0
-    back_angles = [get_angle(state, 'SpineBase','SpineMid','SpineShoulder','X','Y') for state in states]
+    back_angles = [get_angle(state, 'SpineShoulder','SpineBase','Ankle' + direction_substring(rightward),'X','Y') for state in states]
 
     #=====[ Gets average, variance, flat line offset, and first & last angles]=====
     top_frame = 0
@@ -85,10 +86,9 @@ def back_straight(states):
     features.append(back_angles[bottom_frame])
     return np.array(features)
 
-# W.R.T side facing kinect
 def knees_straight(states, rightward):
     assert len(states) > 0
-    knee_angles = [get_angle(state, 'Hip' + direction_substring(rightward), 'Knee' + direction_substring(rightward), 'Foot' + direction_substring(rightward), 'X', 'Y') for state in states]
+    knee_angles = [get_angle(state, 'Hip' + direction_substring(rightward), 'Knee' + direction_substring(rightward), 'Ankle' + direction_substring(rightward), 'X', 'Y') for state in states]
 
     #=====[ Gets average, variance, and flat line offset ]=====
     features = avf(knee_angles)
@@ -96,10 +96,11 @@ def knees_straight(states, rightward):
 
 def elbow_angle(states, rightward):
     assert len(states) > 0
+    bottom_frame = 2
     elbow_angles = [get_angle(state, 'Shoulder' + direction_substring(rightward), 'Elbow' + direction_substring(rightward), 'Hand' + direction_substring(rightward), 'Y', 'Z') for state in states]
 
-    #=====[ Gets average, variance, and flat line offset ]=====
-    features = avf(elbow_angles)
+    #=====[ Gets elbow angle at bottom frame ]=====
+    features = [elbow_angles[bottom_frame]]
     return np.array(features)
 
 def hands_aligned_chest(states, rightward):

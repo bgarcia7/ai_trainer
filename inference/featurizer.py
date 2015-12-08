@@ -10,7 +10,7 @@ def get_min(squat,key):
     return max([(coord,index) for index, coord in enumerate(squat[key])])[1]
 
 #=====[ Returns index to frame with y-coord closes to the midpoint between start/end and squat position for specified key ]=====
-def get_midpoint(squat,start,key):
+def get_midpoint(squat,start,key, multiple):
     
     #=====[ Decide whether getting midpoint between start and squat or squat and end ]=====
     if start:
@@ -21,7 +21,7 @@ def get_midpoint(squat,start,key):
         end = squat.shape[0] - 1
         
     #=====[ Uses the 'true_mid' as an evaluation metric to find optimal index  ]=====
-    true_mid = (squat.iloc[end][key] - squat.iloc[start][key])/2
+    true_mid = (squat.iloc[end][key] - squat.iloc[start][key])*multiple
     deltas = [(np.abs(true_mid - (squat.iloc[end][key] - squat.iloc[index][key])), index) for index in range(start,end)]
     return min(deltas)[1]
 
@@ -30,16 +30,16 @@ def starting_position(squat):
     return squat.iloc[[1]]
 
 #=====[ Returns index to frame with y-coord closes to the midpoint between start and squat position for specified key ]=====
-def start_to_squat(squat,key):
-    return squat.iloc[[get_midpoint(squat,start=1,key=key)]]
+def start_to_squat(squat,key,multiple=0.5):
+    return squat.iloc[[get_midpoint(squat,start=1,key=key,multiple=multiple)]]
 
 #=====[ Returns frame with minimum y-coord for specified key ]=====
 def squat_position(squat,key):
     return squat.iloc[[get_min(squat,key)]]
 
 #=====[ Returns index to frame with y-coord closes to the midpoint between squat position and end for specified key ]=====
-def squat_to_end(squat,key):
-    return squat.iloc[[get_midpoint(squat,start=0,key=key)]]
+def squat_to_end(squat,key,multiple=0.5):
+    return squat.iloc[[get_midpoint(squat,start=0,key=key,multiple=multiple)]]
 
 #=====[ function for plotting full set of 25 coordinates for a given frame ]=====
 def plotBody(df):
@@ -79,38 +79,41 @@ def get_angle_changes(angle1, angle2):
     return ratios
 
 #=====[ Returns states to use for feature extraction  ]=====
-def get_states(squat, key):
+def get_states(squat, key, multiples=[0.5]):
     
     states = []
     states.append(starting_position(squat))
-    states.append(start_to_squat(squat,key))
+
+    for multiple in multiples:
+        states.append(start_to_squat(squat,key,multiple))
+        states.append(squat_to_end(squat,key,multiple))
+
     states.append(squat_position(squat,key))
-    states.append(squat_to_end(squat,key))
     
     return states
 
 #=====[ Extracts four basic sets of features for a given squat and concatenates them  ]=====
 def extract_basic(squat, key):
     
-    return np.concatenate(get_states(squat,key))
+    return np.concatenate(get_states(squat,key),multiples=[0.5])
 
 
 #############################################################################################
 ####### Extracts advanced features for a given squat - ASSUMES Z COORDINATES INCLUDED  ######
 #############################################################################################
 
-def get_advanced_feature_vector(squats, key):
+def get_advanced_feature_vector(squats, key, multiples):
     #=====[ Initialize dict  ]=====
     advanced_feature_vector = defaultdict(list)
     
     #=====[ Extract advanced features for each squat  ]=====
     for squat in squats:
-        squat = get_states(squat,key)
+        squat = get_states(squat,key,multiples)
         advanced_feature_vector['stance_width'].append(stance_shoulder_width(squat))
         advanced_feature_vector['stance_alignment'].append(stance_straightness(squat))
         advanced_feature_vector['knees_over_toes'].append(knees_over_toes(squat))
         advanced_feature_vector['bend_hips_knees'].append(bend_hips_knees(squat))
-        advanced_feature_vector['back_straight'].append(back_straight(squat))
+        # advanced_feature_vector['back_straight'].append(back_straight(squat))
         advanced_feature_vector['head_alignment'].append(head_aligned_back(squat))
         advanced_feature_vector['squat_depth'].append(depth(squat))
         advanced_feature_vector['back_hip_angle'].append(back_hip_angle(squat))
@@ -163,6 +166,8 @@ def bend_hips_knees(states):
 
 #=====[ Extracts features to determine if the back is straight throughout the squat  ]=====
 def back_straight(states):
+
+    print len(states)
     assert len(states) > 0
     back_angles = [get_angle(state,'SpineBase','SpineMid','SpineShoulder','Y','Z') for state in states]
 

@@ -58,8 +58,15 @@ class Personal_Trainer:
 
 	#=====[ Classies an example based on a specified key  ]=====
 	def classify(self, key, X):
-		print self.classifiers[key].classes_
-		return self.classifiers[key].predict(X)
+		try:
+			print self.classifiers[key].classes_
+		except:
+			print "Could not print classes"
+		print self.classifiers[key].predict(X)
+		#=====[ THIS SHOULD BE A RETURN self.classifiers... etc  ]=====
+
+	def get_classifiers(self):
+		return self.classifiers
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
 	def extract_features(self, squats=None):
@@ -84,7 +91,7 @@ class Personal_Trainer:
 		return X, y
 
 	#=====[ Extracts advanced features from squats and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
-	def extract_advanced_features(self, squats=None, labels=None, toIgnore=[]):
+	def extract_advanced_features(self, multiples=[0.5], squats=None, labels=None, toIgnore=[]):
 
 		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
 		if squats is None:
@@ -92,7 +99,7 @@ class Personal_Trainer:
 			labels = self.labels
 
 		#=====[ Get Feature Vector ]=====
-		advanced_feature_vector = fz.get_advanced_feature_vector(squats,self.key)
+		advanced_feature_vector = fz.get_advanced_feature_vector(squats,self.key,multiples)
 
 		#=====[ Return X, and y ]=====
 		X = {}
@@ -112,28 +119,45 @@ class Personal_Trainer:
 		return X, Y, self.file_names	
 
 	#=====[ Extracts features from squats and prepares X, an mxn matrix with m squats and n features per squat  ]=====
-	def extract_all_advanced_features(self, squats=None, labels=None, toIgnore=[]):
+	def extract_all_advanced_features(self, multiples=[0.5], squats=None, labels=None, toIgnore=[]):
 		
-		X, Y, file_names = self.extract_advanced_features(squats, labels, toIgnore)
+		X, Y, file_names = self.extract_advanced_features(squats=squats, labels=labels, toIgnore=toIgnore,multiples=multiples)
 
 		return np.concatenate([X[x] for x in X],axis=1), Y, file_names
 
-	def get_prediction_features(self, squats, toIgnore=[]):
-		#=====[ Get feature vectors ]=====
-		advanced_feature_vector = fz.get_advanced_feature_vector(squats,self.key)
+	# def get_prediction_features(self, squats, multiples=[0.5],toIgnore=[]):
+	# 	#=====[ Get feature vectors ]=====
+	# 	advanced_feature_vector = fz.get_advanced_feature_vector(squats,self.key,multiples)
 
-		#=====[ Build m x n feature matrix  ]=====
-		X = {}
-		for index, feature in enumerate(advanced_feature_vector):
+	# 	#=====[ Build m x n feature matrix  ]=====
+	# 	X = {}
+	# 	for index, feature in enumerate(advanced_feature_vector):
 			
-			training_data = np.array([training_example for training_example in advanced_feature_vector[feature]])
-			#=====[ Try to fit_transform data, print feature name if fail  ]=====
-			try:
-				if feature not in toIgnore:
-					X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
+	# 		training_data = np.array([training_example for training_example in advanced_feature_vector[feature]])
+	# 		#=====[ Try to fit_transform data, print feature name if fail  ]=====
+	# 		try:
+	# 			if feature not in toIgnore:
+	# 				X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
 
-			except Exception as e:
-				print e, feature
+	# 		except Exception as e:
+	# 			print e, feature
 
-		return np.concatenate([X[x] for x in X],axis=1), X.keys()
+	# 	return X, X.keys()
 
+	#=====[ Gets feature vectors for prediction of data  ]=====
+	def get_prediction_features(self,squats):
+			
+		#=====[ Retreives relevant training data for each classifier  ]=====
+		X0, Y, file_names = self.extract_advanced_features(squats=squats, multiples=[0.5])
+		X1, Y, file_names = self.extract_advanced_features(squats=squats, multiples=[0.2, 0.4, 0.6, 0.8])
+		X3, Y, file_names  = self.extract_advanced_features(squats=squats, multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
+
+		#=====[ Sets up dictionary of feature vectors  ]=====
+		X= {}
+		X['bend_hips_knees'] = X3['bend_hips_knees']
+		X['stance_width'] = X1['stance_width']
+		X['squat_depth'] = X0['squat_depth']
+		X['knees_over_toes'] = np.concatenate([X3[x] for x in X3],axis=1)
+		X['back_hip_angle'] = np.concatenate([X0[x] for x in X0],axis=1)
+
+		return X

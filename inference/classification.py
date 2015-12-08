@@ -8,6 +8,8 @@ from sklearn import ensemble
 from sklearn import svm
 from sklearn import neighbors
 from sklearn import linear_model
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn import tree
 
 #=====[ Import util tools  ]=====
 import random
@@ -16,40 +18,39 @@ import numpy as np
 from collections import defaultdict
 
 #=====[ Tests each classifier and chooses the one with highest accuracy  ]=====
-def get_classifiers(trainer):
+def train_classifiers(trainer):
 
-	classifiers = [linear_model.LogisticRegression, svm.SVC, ensemble.RandomForestClassifier]
-	X, Y, file_names = trainer.extract_all_advanced_features(toIgnore=[])
+	#=====[ Instantiates classifiers for each component of the squat  ]=====
+	classifiers = {'bend_hips_knees': tree.DecisionTreeClassifier(min_samples_split=3, criterion="entropy"), 'stance_width': linear_model.LogisticRegression(penalty='l1'),'squat_depth': linear_model.LogisticRegression(penalty='l1'),'knees_over_toes': tree.DecisionTreeClassifier(min_samples_split= 5, criterion="entropy"),'back_hip_angle': linear_model.LogisticRegression()}
 
-	selected_classifiers = {}
+	#=====[ Retreives relevant training data for each classifier  ]=====
+	X0, Y, file_names = trainer.extract_advanced_features(multiples=[0.5])
+	X1, Y, file_names = trainer.extract_advanced_features(multiples=[0.2, 0.4, 0.6, 0.8])
+	X3, Y, file_names  = trainer.extract_advanced_features(multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
+
+	#=====[ Trains each classifier  ]=====
+	classifiers['bend_hips_knees'].fit(X3['bend_hips_knees'], Y['bend_hips_knees'])
+	classifiers['stance_width'].fit(X1['stance_width'], Y['stance_width'])
+	classifiers['squat_depth'].fit(X0['squat_depth'], Y['squat_depth'])
 	
-	#=====[ Select best classifier for each form component  ]=====
-	for key in Y:
+	coalesced_y = replace_label(Y['knees_over_toes'],2,1)
+	classifiers['knees_over_toes'].fit(np.concatenate([X3[x] for x in X3],axis=1), coalesced_y)
+	classifiers['back_hip_angle'].fit(np.concatenate([X0[x] for x in X0],axis=1), Y['back_hip_angle'])
 
-		score = 0
+	return classifiers
 
-		#=====[ Tests each classifier to get the one with the highest score  ]=====
-		for classifier in classifiers:
-			
-			try:
-				
-				accuracy = rnd_prediction(X, Y[key], file_names, classifier)
-				
-				#=====[ If accuracy of current classifier higher than score we've seen so far, update selected_classifier  ]=====
-				print key, accuracy, score
-				if accuracy > score:
-					score = accuracy
-					selected_classifiers[key] = classifier()
-				
-			except Exception as e:
-				print key, e
+#=====[ Replace a label with another from an array of labels  ]=====
+def replace_label(Y, to_replace, new_val):
+	
+	coalesced_y = []
+	
+	for y in Y:
+		if y == to_replace:
+			coalesced_y.append(new_val)
+		else:
+			coalesced_y.append(y)
 
-	#=====[ Train each classifier  ]=====
-	for key in selected_classifiers:
-		selected_classifiers[key].fit(X,Y[key])
-
-	return selected_classifiers
-
+	return coalesced_y
 
 #=====[ Returns the probability for a specified set of features, class and an X, y to fit to  ]=====
 def predictProbs(X,y,X_test, clf_class, **kwargs):

@@ -1,11 +1,12 @@
 import os
 import sys
+import pickle
 
 #=====[ Import inference tools  ]=====
 sys.path.append('inference')
 from ai_trainer import Personal_Trainer
-
 import classification
+import utils as ut
 
 #=====[ Flask ]=====
 from flask import Flask
@@ -24,8 +25,20 @@ app = Flask(__name__, static_folder=static_dir)
 
 #=====[ Squat Inference Setup ]=====
 pt = Personal_Trainer('NeckY')
-pt.load_squats(os.path.join('data/data_sets','multipleClass3.p'))
-pt.set_classifiers(classification.get_classifiers(pt))
+
+try:
+	pt.load_squats(os.path.join('data/data_sets','multipleClass4.p'))
+	ut.print_success('Training data loaded')
+	try:
+		classifiers = pickle.load(open(os.path.join('inference/','trained_classifiers.p'),'rb'))
+		pt.set_classifiers(classifiers)
+		ut.print_success('Classifiers trained')
+	except Exception as e:
+		ut.print_failure('Could not train classifiers' + str(e))
+except Exception as e:
+	ut.print_failure('Could not load training data:' + str(e))
+
+
 
 ################################################################################
 ####################[ HANDLING REQUESTS ]#######################################
@@ -37,10 +50,19 @@ def home():
 
 @app.route("/analyze/<file_name>")
 def analyze(file_name):
+	
 	print file_name
+	
+	#=====[ Analyze squat data to pull out normalized, spliced reps ]=====
 	squats = pt.analyze_squats(file_name)
-	X, keys = pt.get_prediction_features(squats)
-	for key in keys:
+
+	#=====[ Extract feature vectors from squats for each exercise componenet  ]=====
+	feature_vectors = pt.get_prediction_features(squats)
+	print feature_vectors
+	
+	#=====[ Run classification on each squat component and report results  ]=====
+	for key in feature_vectors:
+		X = feature_vectors[key]
 		print key,':', pt.classify(key, X),'\n'
 
 if __name__ == '__main__':

@@ -61,9 +61,13 @@ def separate_squats(data_file, key, column_labels, epsilon=0.15, gamma=20, delta
 		with open(data_file) as f:
 			for line in f:
 				try:
-					data.append([float(x.replace('\r\n','')) for x in line.split(',')])
+					if 'Infinity' in line or 'NN' in line:
+						continue
+					line = [float(x.replace('\r\n','')) for x in line.split(',')]
+					data.append(line)
 				except Exception as e:
 					print e
+
 
 		#=====[ Make dataframe and readjust indices to take into account front and back cuts  ]=====
 		df = pd.DataFrame(data, columns=column_labels)

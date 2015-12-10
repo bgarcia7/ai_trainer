@@ -23,7 +23,10 @@ def get_midpoint(squat,start,key, multiple):
     #=====[ Uses the 'true_mid' as an evaluation metric to find optimal index  ]=====
     true_mid = (squat.iloc[end][key] - squat.iloc[start][key])*multiple
     deltas = [(np.abs(true_mid - (squat.iloc[end][key] - squat.iloc[index][key])), index) for index in range(start,end)]
-    return min(deltas)[1]
+    try: 
+        return min(deltas)[1]
+    except:
+        return start
 
 #=====[ Returns squat at the first position ]=====
 def starting_position(squat):
@@ -110,7 +113,7 @@ def get_advanced_feature_vector(squats, key, multiples):
     for squat in squats:
         squat = get_states(squat,key,multiples)
         advanced_feature_vector['stance_width'].append(stance_shoulder_width(squat))
-        advanced_feature_vector['stance_alignment'].append(stance_straightness(squat))
+        # advanced_feature_vector['stance_alignment'].append(stance_straightness(squat))
         advanced_feature_vector['knees_over_toes'].append(knees_over_toes(squat))
         advanced_feature_vector['bend_hips_knees'].append(bend_hips_knees(squat))
         # advanced_feature_vector['back_straight'].append(back_straight(squat))

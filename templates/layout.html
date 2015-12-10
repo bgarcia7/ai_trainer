@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Personal Trainer</title>
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+  <link href="http://fonts.googleapis.com/css?family=Lato" rel='stylesheet' type='text/css'>
+
+  <!-- <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script> -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+
+  <div class="site-wrapper">
+
+    <div class="site-wrapper-inner">
+
+      <div class="cover-container">
+
+      {% block content %}{% endblock %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

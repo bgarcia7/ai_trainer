@@ -58,7 +58,10 @@ class Personal_Trainer:
 
 	#=====[ Classies an example based on a specified key  ]=====
 	def classify(self, key, X):
-		return self.classifiers[key].predict(X)
+		try:
+			return self.classifiers[key].predict(X)
+		except:
+			return None
 		
 		#=====[ THIS SHOULD BE A RETURN self.classifiers... etc  ]=====
 

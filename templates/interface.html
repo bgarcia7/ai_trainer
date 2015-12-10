@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+
+
+<div class="recording">
+  {% if recordingStatus %}
+  <a href="/record/false">Stop recording</a>
+  {% else %}
+  <a href="/record/true">Start recording</a>
+  {% endif %}
+</div>
+
+{% endblock %}

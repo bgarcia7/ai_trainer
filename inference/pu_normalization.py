@@ -12,11 +12,11 @@ def direction_substring(dir_bool):
 
 #=====[ Provides max y-coord of head  ]=====
 def y_upper_bound(df):
-	return np.min(df['HeadY'])
+	return np.min(df['HeadY'][df.shape[0]/3:df.shape[0]*2/3])
 
 #=====[ Provides median y-coord of feet  ]=====
 def y_lower_bound(df, rightward):
-	return np.max(df['Hand' + direction_substring(rightward) + 'Y'])
+	return np.max(df['Hand' + direction_substring(rightward) + 'Y'][df.shape[0]/3:df.shape[0]*2/3])
 
 #=====[ Provides centered x-coord for pushup  ]=====
 def x_zero(df, rightward):
@@ -31,32 +31,24 @@ def scaling_factor(df, rightward):
 	return np.abs(y_upper_bound(df) - y_lower_bound(df, rightward))
 
 #=====[ Normalizes pushups to keep feet --> head = 0 --> 1  ]=====
-def normalize(df, pushups, z_coords=False):
+def normalize(df, pushups):
 	
 	#=====[ Normalizing constants for the entire set of exercises ]=====
 	rightward = pushup_is_right(df)
 	y_head = y_upper_bound(df)
 	scale = scaling_factor(df, rightward)
 	x_start = x_zero(df, rightward)
-	if(z_coords):
-		z_midpoint = z_zero(df)
+	z_midpoint = z_zero(df)
 	
 	for pushup in pushups:
 		
 		#=====[ Even columns are x-coordinates, odd columns are y-coordinates -- normalize respectively ]=====
-		if(not z_coords):
-			for index, col in enumerate(pushup.columns):
-				if (index % 2) == 1:
-					pushup[col] = pushup[col].apply((lambda y: ((y - y_head)/scale)))
-				else:
-					pushup[col] = pushup[col].apply((lambda x: (abs((x - x_start)/scale))))
-		else:
-			for index, col in enumerate(pushup.columns):
-				if index % 3 == 2:
-					pushup[col] = pushup[col].apply((lambda z: ((z - z_midpoint)/scale)))
-				elif index % 3 == 1:
-					pushup[col] = pushup[col].apply((lambda y: ((y - y_head)/scale)))
-				else:
-					pushup[col] = pushup[col].apply(lambda x: (abs((x - x_start)/scale)))        
+		for index, col in enumerate(pushup.columns):
+			if index % 3 == 2:
+				pushup[col] = pushup[col].apply((lambda z: ((z - z_midpoint)/scale)))
+			elif index % 3 == 1:
+				pushup[col] = pushup[col].apply((lambda y: ((y - y_head)/scale)))
+			else:
+				pushup[col] = pushup[col].apply(lambda x: (abs((x - x_start)/scale)))        
 
 	return pushups

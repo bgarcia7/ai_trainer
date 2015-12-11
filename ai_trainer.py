@@ -12,6 +12,7 @@ sys.path.append('inference')
 #=====[ Import our utils  ]=====
 import squat_separation as ss
 import featurizer as fz
+import pu_featurizer as pfz
 
 #=====[ Import Data ]=====
 import coordKeysZ as keysXYZ
@@ -161,3 +162,31 @@ class Personal_Trainer:
 		X['back_hip_angle'] = np.concatenate([X0[x] for x in X0],axis=1)
 
 		return X
+
+
+	def extract_pu_features(self, multiples=[0.5], reps=None, labels=None, toIgnore=[]):
+
+		#=====[ If no set of squats passed in to extract features from, extracts features from self.squats  ]=====
+		if reps is None:
+			reps = self.squats
+			labels = self.labels
+
+		#=====[ Get Feature Vector ]=====
+		advanced_feature_vector = pfz.get_advanced_feature_vector(reps,self.key,multiples)
+
+		#=====[ Return X, and y ]=====
+		X = {}
+		Y = {}
+
+		for feature in advanced_feature_vector:
+			training_data = np.array([training_example for training_example in advanced_feature_vector[feature]])
+		
+			#=====[ Try to fit_transform data, print feature name if fail  ]=====
+			try:
+				if feature not in toIgnore:
+					X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
+					Y[feature] = labels[feature]	    
+			except Exception as e:
+				print e, feature
+		
+		return X, Y, self.file_names	

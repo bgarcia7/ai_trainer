@@ -62,7 +62,12 @@ def get_angle(state, joint1, joint2, joint3, axis1, axis2):
     #=====[ Gets distance between the disconnected joints  ]=====
     distance = math.sqrt(math.pow(state[joint1 + axis1] - state[joint3 + axis1], 2) + math.pow(state[joint1 + axis2] - state[joint3 + axis2], 2))
     
-    angle = math.acos((math.pow(bone1, 2) + math.pow(bone2, 2) - math.pow(distance, 2)) / (2 * bone1 * bone2))
+    try:
+        angle = math.acos((math.pow(bone1, 2) + math.pow(bone2, 2) - math.pow(distance, 2)) / (2 * bone1 * bone2))
+    except Exception as e:
+        print e
+        return 0
+
     return angle
 
 #=====[ Returns ratios of changes between two angles over time  ]=====
@@ -116,7 +121,7 @@ def get_advanced_feature_vector(squats, key, multiples):
         # advanced_feature_vector['stance_alignment'].append(stance_straightness(squat))
         advanced_feature_vector['knees_over_toes'].append(knees_over_toes(squat))
         advanced_feature_vector['bend_hips_knees'].append(bend_hips_knees(squat))
-        # advanced_feature_vector['back_straight'].append(back_straight(squat))
+        advanced_feature_vector['back_straight'].append(back_straight(squat))
         advanced_feature_vector['head_alignment'].append(head_aligned_back(squat))
         advanced_feature_vector['squat_depth'].append(depth(squat))
         advanced_feature_vector['back_hip_angle'].append(back_hip_angle(squat))
@@ -170,18 +175,17 @@ def bend_hips_knees(states):
 #=====[ Extracts features to determine if the back is straight throughout the squat  ]=====
 def back_straight(states):
 
-    print len(states)
     assert len(states) > 0
     back_angles = [get_angle(state,'SpineBase','SpineMid','SpineShoulder','Y','Z') for state in states]
 
     #=====[ Gets average and variance  ]=====
-    avg = np.average(back_angles)
-    features = []
-    variance = sum(map(lambda x : (x - avg)**2, back_angles)) / len(back_angles)
-    features.append(variance)
-    features.append(avg)
+    # avg = np.average(back_angles)
+    # features = []
+    # variance = sum(map(lambda x : (x - avg)**2, back_angles)) / len(back_angles)
+    # features.append(variance)
+    # features.append(avg)
 
-    return np.array(features)
+    return np.array(back_angles)
 
 #=====[ Extracts features to determine if the head and back are aligned  ]=====
 def head_aligned_back(states):

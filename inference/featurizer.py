@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import math
 from collections import defaultdict
+from sklearn import preprocessing
 
 #======[ Returns index to frame with minimum y-coord for specified key ]=====
 def get_min(squat,key):   
@@ -127,6 +128,25 @@ def get_advanced_feature_vector(squats, key, multiples):
         advanced_feature_vector['back_hip_angle'].append(back_hip_angle(squat))
 
     return advanced_feature_vector
+
+#=====[ Takes a feature dictionary and labels and appropriately populates a Y and X with unit variance and zero mean  ]=====
+def transform_data(features, labels, toIgnore, predict=False):
+    X = {}
+    Y = {}
+
+    for feature in features:
+        training_data = np.array([training_example for training_example in features[feature]])
+    
+        #=====[ Try to fit_transform data, print feature name if fail  ]=====
+        try:
+            if feature not in toIgnore:
+                X[feature] = preprocessing.StandardScaler().fit_transform(training_data)
+                if not predict:
+                    Y[feature] = labels[feature]        
+        except Exception as e:
+            print e, feature
+
+    return X, Y
 
 #=====[ Extracts features for determining whether feet are shoulder width apart  ]=====
 def stance_shoulder_width(states):

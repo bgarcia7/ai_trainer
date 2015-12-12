@@ -31,7 +31,7 @@ sharedState = {'recording': 'false'}
 pt = Personal_Trainer('NeckY')
 
 try:
-	pt.load_squats(os.path.join('data/data_sets','multipleClass4.p'))
+	pt.load_reps(os.path.join('data/data_sets','multipleClass4.p'))
 	ut.print_success('Training data loaded')
 	try:
 		classifiers = pickle.load(open(os.path.join('inference/','trained_classifiers2.p'),'rb'))

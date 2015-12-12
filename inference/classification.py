@@ -33,9 +33,11 @@ def train_classifiers(trainer):
 	classifiers['stance_width'].fit(X1['stance_width'], Y['stance_width'])
 	classifiers['squat_depth'].fit(X0['squat_depth'], Y['squat_depth'])
 	
+	X30 = np.concatenate([X3[x] for x in X3],axis=1)
+	X00 = np.concatenate([X0[x] for x in X0],axis=1)
 	coalesced_y = replace_label(Y['knees_over_toes'],2,1)
-	classifiers['knees_over_toes'].fit(np.concatenate([X3[x] for x in X3],axis=1), coalesced_y)
-	classifiers['back_hip_angle'].fit(np.concatenate([X0[x] for x in X0],axis=1), Y['back_hip_angle'])
+	classifiers['knees_over_toes'].fit(X30, coalesced_y)
+	classifiers['back_hip_angle'].fit(X00, Y['back_hip_angle'])
 
 	return classifiers
 

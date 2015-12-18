@@ -28,19 +28,28 @@ results = []
 sharedState = {'recording': 'false'}
 
 #=====[ Squat Inference Setup ]=====
-pt = Personal_Trainer('NeckY')
+pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'})
+
+
+
 
 try:
-	pt.load_reps(os.path.join('data/data_sets','multipleClass4.p'))
-	ut.print_success('Training data loaded')
+	#=====[ Get classifiers from pickled file ]=====
+	squat_classifiers = pickle.load(open(os.path.join('../inference/','squat_classifiers.p'),'rb'))
+	pushup_classifiers = pickle.load(open(os.path.join('../inference/','pushup_classifiers.p'),'rb'))
+	
+	ut.print_success('Loaded trained classifiers')
 	try:
-		classifiers = pickle.load(open(os.path.join('inference/','trained_classifiers2.p'),'rb'))
-		pt.set_classifiers(classifiers)
-		ut.print_success('Classifiers trained')
+		#=====[ Set classifiers for our trainer ]=====
+		pt.set_classifiers('squat',squat_classifiers)
+		pt.set_classifiers('pushup',pushup_classifiers)
+
+		ut.print_success('Saved classifiers')
+	
 	except Exception as e:
-		ut.print_failure('Could not train classifiers' + str(e))
+		ut.print_failure('Could not save classifiers: ' + str(e))
 except Exception as e:
-	ut.print_failure('Could not load training data:' + str(e))
+	ut.print_failure('Could not load classifiers:' + str(e))
 
 
 
@@ -58,18 +67,20 @@ def analyze(file_name):
 	print file_name
 	
 	#=====[ Analyze squat data to pull out normalized, spliced reps ]=====
-	squats = pt.analyze_squats(file_name)
-
+	squats = pt.analyze_reps('squat','../data/raw_data/squat_pushupData_10to20/squatData15.txt')
+	
 	#=====[ Extract feature vectors from squats for each exercise componenet  ]=====
-	feature_vectors = pt.get_prediction_features(squats)
+	squat_feature_vectors = pt.get_prediction_features('squat',squats)
 	
 	results = {}
 	#=====[ Run classification on each squat component and report results  ]=====
-	for key in feature_vectors:
-		X = feature_vectors[key]
-		classification = pt.classify(key, X)
-		results[key] = classification
+	for key in squat_feature_vectors:
+	    X = squat_feature_vectors[key]
+	    classification = pt.classify('squat', key, X)
+	    results[key] = classification
+	    # print '\n', key ,':\n', classification, '\n'
 		
+	return results
 
 @app.route("/interface")
 def interface():
@@ -99,8 +110,7 @@ def analyze_raw():
 	to_write = open('squatData.txt','wb')
 	to_write.write(request.data)
 	results = analyze('squatData.txt')
-	for key in results:
-		print key, ':', results[key]
+	pt.get_advice('squat',results)
 
 	return 'OK'
 

@@ -55,6 +55,7 @@ def evaluate(labels, y_test, y_pred):
     if len(y_test) != len (y_pred):
         return 0
     for index, y in enumerate(y_test):
+    
         if y_pred[index] == y:
             if y == 1:
                 labels['1_1'] +=1
@@ -133,9 +134,9 @@ def rnd_prediction(training_data, labels, file_names, clf_class, toIgnore=None, 
 #=====[ Cross validation while holding out squats for any given individual at a time. This is done to make sure
 #=====[ that we don't train on a person's body type and then test on a very similar (often near identical) example.
 #=====[ RUNS 20 TRIALS TO SEE RESULTS AS THEY CHANGE WITH RESPECT TO NUMBER OF TRAINING EXAMPLES ]=====
-def rnd_prediction_increase_training(training_data, labels, file_names, clf_class, toIgnore=None, num_iters=10, **kwargs):
+def rnd_prediction_increase_training(training_data, labels, file_names, clf_class, num_slices=20, toIgnore=None, num_iters=10, **kwargs):
     
-    num_training_examples = [x*10 for x in range(1,20)]
+    num_training_examples = [x*10 for x in range(1,num_slices)]
     
     accuracy = [0 for _ in range(len(num_training_examples))]
     accuracy_train = [0 for _ in range(len(num_training_examples))]

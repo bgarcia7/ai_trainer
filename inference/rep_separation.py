@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import normalization as nz
+import pu_normalization as pnz
 import os
+
 
 #=====[ Checks if the point being observed qualifies as a minimum  ]=====
 def is_min(y_coords, height, gradient, index, epsilon, beta):
@@ -40,13 +42,16 @@ def get_local_mins(y_coords, epsilon=0.25, gamma=20, delta=0.5, beta=1):
 	return sorted(local_mins)
 
 
-#=====[ Separates squats in a given dataframe based on changes in y-coord of specified column "key"  ]=====
-def separate_squats(data_file, key, column_labels, epsilon=0.15, gamma=20, delta=0.5, beta=1):
+#=====[ Separates reps in a given dataframe based on changes in y-coord of specified column "key"  ]=====
+def separate_reps(data_file, exercise, key, column_labels, epsilon=0.15, gamma=20, delta=0.5, beta=1):
 
 	front_cut_values = [0, 0, 0, 25, 0, 50, 0, 25, 50, 100, 0, 100]
 	back_cut_values = [0, 0, 0, 0, 25, 0, 50, 25, 50, 0, 100, 100]
 	epsilon_values = [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25]
 	
+	if exercise is 'pushup':
+		delta = 0.2
+		beta = 2
 
 	for iteration in range(0,len(front_cut_values)):
 		
@@ -61,7 +66,7 @@ def separate_squats(data_file, key, column_labels, epsilon=0.15, gamma=20, delta
 		with open(data_file) as f:
 			for line in f:
 				try:
-					if 'Infinity' in line or 'NN' in line:
+					if 'Infinity' in line or 'NaN' in line:
 						continue
 					line = [float(x.replace('\r\n','')) for x in line.split(',')]
 					data.append(line)
@@ -76,16 +81,19 @@ def separate_squats(data_file, key, column_labels, epsilon=0.15, gamma=20, delta
 			
 		y_coords = np.array(df.get(key))
 		mins = get_local_mins(y_coords, epsilon, gamma, delta, beta)
-		squats = []
+		reps = []
 
-		#=====[ Get points from DF between each max found -- constitutes a single squat ]=====
+		#=====[ Get points from DF between each max found -- constitutes a single rep ]=====
 		for index,x in enumerate(mins):
 			if(index == len(mins) -1 ):
 				continue
-			squat = (df.loc[x:mins[index+1]-1]).copy(True)
-			squats.append(squat.set_index([range(squat.shape[0])]))
+			rep = (df.loc[x:mins[index+1]-1]).copy(True)
+			reps.append(rep.set_index([range(rep.shape[0])]))
 
-		if len(squats) > 1:
+		if len(reps) > 1:
 			break
 
-	return nz.normalize(df, squats)
+	if exercise is 'squat':
+		return nz.normalize(df, reps)
+	elif exercise is 'pushup': 
+		return pnz.normalize(df, reps)

@@ -18,7 +18,7 @@ import numpy as np
 from collections import defaultdict
 
 #=====[ Tests each classifier and chooses the one with highest accuracy  ]=====
-def train_classifiers(trainer):
+def train_squat_classifiers(trainer):
 
 	#=====[ Instantiates classifiers for each component of the squat  ]=====
 	classifiers = {'bend_hips_knees': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"), 'stance_width': linear_model.LogisticRegression(penalty='l1'),'squat_depth': linear_model.LogisticRegression(penalty='l1'),'knees_over_toes': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"),'back_hip_angle': linear_model.LogisticRegression()}
@@ -41,6 +41,25 @@ def train_classifiers(trainer):
 
 	return classifiers
 
+def train_pushup_classifiers(trainer):
+
+	#=====[ Instantiates classifiers for each component of the squat  ]=====
+	classifiers = {'head_back': linear_model.LogisticRegression(penalty='l1',C=5), 'knees_straight': linear_model.LogisticRegression(penalty='l1', C=8),'elbow_angle': linear_model.LogisticRegression(penalty='l1', C=8)}
+
+	#=====[ Retreives relevant training data for each classifier  ]=====
+	X3, Y, file_names  = trainer.extract_pu_features(multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
+	X4, Y, file_names = trainer.extract_pu_features(multiples=[float(x)/100 for x in range(100)])
+	X30 = np.concatenate([X3[x] for x in X3],axis=1)
+	X40 = np.concatenate([X4[x] for x in X4],axis=1)
+
+	#=====[ Trains each classifier  ]=====
+	classifiers['head_back'].fit(X40, Y['head_back'])
+	classifiers['knees_straight'].fit(X30, Y['knees_straight'])
+	classifiers['elbow_angle'].fit(X3['elbow_angle'], Y['elbow_angle'])
+
+	return classifiers
+
+
 #=====[ Replace a label with another from an array of labels  ]=====
 def replace_label(Y, to_replace, new_val):
 	
@@ -53,65 +72,3 @@ def replace_label(Y, to_replace, new_val):
 			coalesced_y.append(y)
 
 	return coalesced_y
-
-#=====[ Returns the probability for a specified set of features, class and an X, y to fit to  ]=====
-def predictProbs(X,y,X_test, clf_class, **kwargs):
-	clf = clf_class(**kwargs)
-	clf.fit(X ,y)
-	return clf.predict_proba(X_test)
-
-#=====[ Returns predictions for a specified set of features, class and an X, y to fit to  ]=====
-def predict_labels(X, y, X_test, clf_class, **kwargs):
-	clf = clf_class(**kwargs)
-	clf.fit(X ,y)
-	# print "Labels ", clf.classes_
-	return clf.predict(X_test)
-
-
-#=====[ Tests accuracy with hold out sets  ]=====
-def stratified_cv(X, y, clf_class, shuffle=True, n_folds=10, **kwargs):
-	stratified_k_fold = cross_validation.StratifiedKFold(y, n_folds=n_folds, shuffle=shuffle)
-	y_pred = y.copy()
-
-	#=====[ Predict for each held out fold  ]=====
-	for i, j in stratified_k_fold:
-		X_train, X_test = X[i], X[j]
-		y_train = y[i]
-		clf = clf_class(**kwargs)
-		clf.fit(X_train,y_train)
-		y_pred[j] = clf.predict(X_test)
-	return y_pred
-
-
-#=====[ Tests prediction while holding out entire files to ensure that we don't test against a squat 
-#=====[ from a user we've trained on  ]=====
-def rnd_prediction(training_data, labels, file_names, clf_class, toIgnore=None, num_iters=10, **kwargs):
-	
-	#=====[ Instantiate our personal trainer for feature extraction ]=====
-	accuracy = 0
-
-	#=====[ Randomly leave out one of the files and test on it num_iter times ]======
-	names = list(set(file_names))
-	for name in names:
-		 
-		toIgnore = name
-		squats = []
-		
-		to_ignore = name
-	
-		#=====[ Creates training examples and labels without the file to ignore  ]=====
-		X = [x for index, x in enumerate(training_data) if file_names[index] != toIgnore]
-		Y = [y for index, y in enumerate(labels) if file_names[index] != toIgnore]
-		
-		#=====[ Creates test examples and labels without the file to ignore  ]=====
-		X_test = [x for index, x in enumerate(training_data) if file_names[index] == toIgnore]
-		y_test = [y for index, y in enumerate(labels) if file_names[index] == toIgnore]
-		
-		local_accuracy = metrics.accuracy_score(y_test, predict_labels(X, Y, X_test, clf_class, **kwargs))
-	
-		accuracy += local_accuracy
-		
-		# print predictProbs(X,Y,X_test,clf_class,**kwargs)
-		# print(toIgnore, local_accuracy)
-
-	return accuracy/len(names)

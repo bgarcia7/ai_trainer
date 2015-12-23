@@ -124,12 +124,13 @@ def rnd_prediction(training_data, labels, file_names, clf_class, toIgnore=None, 
         accuracy_train += local_accuracy_train
 
     #=====[ Print stats for training and testing data ]=====
-    print '############ TRAINING DATA ############\n'
-    print 'Accuracy %f' % (accuracy_train/len(names))
-    print_analysis(training_counts), '\n'
-    print '############ TEST DATA ############\n'
-    print 'Accuracy %f' % (accuracy/len(names))
-    print_analysis(counts),'\n\n'
+    # print '############ TRAINING DATA ############\n'
+    # print 'Accuracy %f' % (accuracy_train/len(names))
+    # print_analysis(training_counts), '\n'
+    # print '############ TEST DATA ############\n'
+    # print 'Accuracy %f' % (accuracy/len(names))
+    # print_analysis(counts),'\n\n'
+    return print_analysis(counts,verbose=False),(accuracy/len(names))
 
 #=====[ Cross validation while holding out squats for any given individual at a time. This is done to make sure
 #=====[ that we don't train on a person's body type and then test on a very similar (often near identical) example.
@@ -183,3 +184,44 @@ def rnd_prediction_increase_training(training_data, labels, file_names, clf_clas
         f_score_training.append(print_analysis(training_counts, verbose=False))
         
     return f_score, f_score_training, accuracy, accuracy_train
+
+
+def forward_search(num_features, X, Y, file_names, clf_class, **kwargs):
+    
+    #=====[ Keeps track of best global accuracy and fscore ]======
+    best_accuracy = 0
+    best_fscore = 0 
+    
+    #=====[ Builds new feature vector and returns indices of best features to use ]=====
+    X_new = X[:,0:0]
+    indices = []
+        
+    for feature in range(num_features):
+
+        #=====[ Used to make sure we have not found a maximum in our accuracy/fscore ]======
+        feature_added = False
+        
+        #=====[ Loops through every feature in X to find the next best feature ]=====
+        for index in range(X.shape[1]):
+                
+            X_temp = np.concatenate([X_new,X[:,index:(index+1)]],axis=1)
+            
+            fscore, accuracy = tu.rnd_prediction(X_temp,Y,file_names,clf_class,**kwargs)
+
+            #=====[ Checks mean square error between accuracy and f_score ]=====
+            if ((1-accuracy)**2 + (1-fscore)**2) < ((1-best_accuracy)**2 + (1-best_fscore)**2):
+                best_accuracy = accuracy
+                best_fscore = fscore
+                best_index = index
+                feature_added = True
+
+        if feature_added:
+            indices.append(best_index)
+            X_new = np.concatenate([X_new,X[:,best_index:(best_index+1)]],axis=1)
+        else:
+            break
+    
+    #=====[ Print stats and return indices of top features ]=====
+    print "Best accuracy:", best_accuracy
+    print "Best f-score:", best_fscore
+    return indices           

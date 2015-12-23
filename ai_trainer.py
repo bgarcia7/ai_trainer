@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import sys
+import os
 from sklearn import preprocessing
 from pprint import pprint
 from collections import defaultdict
@@ -121,6 +122,46 @@ class Personal_Trainer:
 
 		return X
 
+	def get_prediction_features_opt(self, exercise, reps):
+			
+		if exercise is 'squat':
+
+			#=====[ Load feature indicies  ]=====
+			feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indicies.p'),'rb'))
+
+			#=====[ Retreives relevant training data for each classifier  ]=====
+			X3, Y, file_names = self.extract_advanced_features(reps=reps, multiples=[float(x)/20 for x in range(1,20)],predict=True)
+			X30 = np.concatenate([X3[x] for x in X3],axis=1)
+
+			#=====[ Sets up dictionary of feature vectors  ]=====
+			X= {}
+			X['bend_hips_knees'] = X30[:,feature_indices['bend_hips_knees']]
+			X['stance_width'] = X30[:,feature_indices['stance_width']]
+			X['squat_depth'] = X30[:,feature_indices['squat_depth']]
+			X['knees_over_toes'] = X30[:,feature_indices['knees_over_toes']]
+			X['back_hip_angle'] = X30[:,feature_indices['back_hip_angle']]
+
+		elif exercise is 'pushup':
+			#=====[ Retreives relevant training data for each classifier  ]=====
+			X3, Y, file_names  = self.extract_pu_features(reps=reps, multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95], predict=True)
+			X4, Y, file_names = self.extract_pu_features(reps=reps, multiples=[float(x)/100 for x in range(100)], predict=True)
+
+			X30 = np.concatenate([X3[x] for x in X3],axis=1)
+			X40 = np.concatenate([X4[x] for x in X4],axis=1)
+
+			#=====[ Sets up dictionary of feature vectors  ]=====
+			X = {}
+			X['head_back'] = preprocessing.StandardScaler().fit_transform(X40)
+			X['knees_straight'] = preprocessing.StandardScaler().fit_transform(X30)
+			X['elbow_angle'] = preprocessing.StandardScaler().fit_transform(X3['elbow_angle'])
+
+
+		ut.print_success('Features extracted for ' + exercise)
+
+		return X
+
+
+
 	#=====[ Extracts advanced features from pushups and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
 	def extract_pu_features(self, multiples=[0.5], reps=None, labels=None, toIgnore=[], predict=False):
 
@@ -152,3 +193,5 @@ class Personal_Trainer:
 		X, Y = fz.transform_data(advanced_feature_vector, labels, toIgnore, predict)		
 		
 		return X, Y, self.file_names['squat']	
+
+

@@ -30,9 +30,6 @@ sharedState = {'recording': 'false'}
 #=====[ Squat Inference Setup ]=====
 pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'})
 
-
-
-
 try:
 	#=====[ Get classifiers from pickled file ]=====
 	squat_classifiers = pickle.load(open(os.path.join('../inference/','squat_classifiers.p'),'rb'))
@@ -50,8 +47,6 @@ try:
 		ut.print_failure('Could not save classifiers: ' + str(e))
 except Exception as e:
 	ut.print_failure('Could not load classifiers:' + str(e))
-
-
 
 ################################################################################
 ####################[ HANDLING REQUESTS ]#######################################
@@ -78,7 +73,6 @@ def analyze(file_name):
 	    X = squat_feature_vectors[key]
 	    classification = pt.classify('squat', key, X)
 	    results[key] = classification
-	    # print '\n', key ,':\n', classification, '\n'
 		
 	return results
 
@@ -99,11 +93,6 @@ def record(status):
 		ut.print_success('Recording stopped')
 	return redirect(url_for('interface'))
 
-@app.route("/poll")
-def poll():
-	"""Called by the C# Kinect app repeatedly to see when to start/stop recording"""
-	print "Pinged by Kinect app. Recording is:", sharedState['recording']
-	return sharedState['recording']
 
 @app.route("/analyze_raw", methods=['POST'])
 def analyze_raw():

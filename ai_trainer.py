@@ -84,7 +84,7 @@ class Personal_Trainer:
 		return self.classifiers[exercise]
 
 	def get_advice(self, exercise, results):
-		advice.advice(exercise, results)
+		return advice.advice(exercise, results)
 
 	#=====[ Gets feature vectors for prediction of data  ]=====
 	def get_prediction_features(self, exercise, reps):
@@ -127,7 +127,7 @@ class Personal_Trainer:
 		if exercise is 'squat':
 
 			#=====[ Load feature indicies  ]=====
-			feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indicies.p'),'rb'))
+			feature_indices = pickle.load(open(os.path.join('inference/','squat_feature_indicies.p'),'rb'))
 
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names = self.extract_advanced_features(reps=reps, multiples=[float(x)/20 for x in range(1,20)],predict=True)

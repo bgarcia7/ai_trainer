@@ -144,7 +144,8 @@ def transform_data(features, labels, toIgnore, predict=False):
                 if not predict:
                     Y[feature] = labels[feature]        
         except Exception as e:
-            print e, feature
+            # print e, feature
+            continue;
 
     return X, Y
 

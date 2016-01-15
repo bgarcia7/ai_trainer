@@ -1,4 +1,6 @@
 from collections import Counter
+import sys
+sys.path.append('feedback')
 import advice_messages
 
 def advice(exercise, results):
@@ -35,10 +37,31 @@ def advice(exercise, results):
 				if severity > 0.9:
 					strengths.append(key)
 
-	print_problems(major_problems, messages, categories, 'Major')
-	print_problems(minor_problems, messages, categories, 'Minor')
-	print_strengths(strengths, messages, categories)
+	# print_problems(major_problems, messages, categories, 'Major')
+	# print_problems(minor_problems, messages, categories, 'Minor')
+	# print_strengths(strengths, messages, categories)
+	advice = 'A total of ' + str(num_reps) + ' were analyzed'
+	advice += get_problems(major_problems, messages, categories, 'Major') + '\n'
+	advice += get_problems(minor_problems, messages, categories, 'Minor') + '\n'
+	advice += get_strengths(strengths, messages, categories)
+	return advice 
 	
+def get_problems(problems, messages, categories, problem_type):
+	output = ''				
+	if len(problems) > 0:
+		output += '\n\n' + problem_type + ' Problems:\n\n'
+		for problem in problems:
+			output += categories[problem] + ":" + messages[problem] + '\n'
+	return output
+
+def get_strengths(strengths, messages, categories):
+	output = ''
+	if len(strengths) > 0:
+		output += '\n\nStrengths:\n\n'
+		for strength in strengths:
+			output+= categories[strength] + '\n'
+	return output
+
 def print_problems(problems, messages, categories, problem_type):				
 	if len(problems) > 0:
 		print '\n\n' + problem_type + ' Problems:\n'

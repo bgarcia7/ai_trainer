@@ -5,7 +5,7 @@ import pickle
 #=====[ Import inference tools  ]=====
 sys.path.append('inference')
 from ai_trainer import Personal_Trainer
-import classification
+import classification_ftopt
 import utils as ut
 
 #=====[ Flask ]=====
@@ -25,15 +25,14 @@ base_dir = os.path.split(os.path.realpath(__file__))[0]
 static_dir = os.path.join(base_dir, 'static')
 app = Flask(__name__, static_folder=static_dir)
 results = []
-sharedState = {'recording': 'false'}
 
 #=====[ Squat Inference Setup ]=====
 pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'})
 
 try:
 	#=====[ Get classifiers from pickled file ]=====
-	squat_classifiers = pickle.load(open(os.path.join('../inference/','squat_classifiers.p'),'rb'))
-	pushup_classifiers = pickle.load(open(os.path.join('../inference/','pushup_classifiers.p'),'rb'))
+	squat_classifiers = pickle.load(open(os.path.join('inference/','squat_classifiers_ftopt.p'),'rb'))
+	pushup_classifiers = pickle.load(open(os.path.join('inference/','pushup_classifiers_ftopt.p'),'rb'))
 	
 	ut.print_success('Loaded trained classifiers')
 	try:
@@ -59,13 +58,12 @@ def home():
 @app.route("/analyze/<file_name>")
 def analyze(file_name):
 	
-	print file_name
 	
 	#=====[ Analyze squat data to pull out normalized, spliced reps ]=====
-	squats = pt.analyze_reps('squat','../data/raw_data/squat_pushupData_10to20/squatData15.txt')
+	squats = pt.analyze_reps('squat', file_name)
 	
 	#=====[ Extract feature vectors from squats for each exercise componenet  ]=====
-	squat_feature_vectors = pt.get_prediction_features('squat',squats)
+	squat_feature_vectors = pt.get_prediction_features_opt('squat',squats)
 	
 	results = {}
 	#=====[ Run classification on each squat component and report results  ]=====
@@ -76,31 +74,20 @@ def analyze(file_name):
 		
 	return results
 
-@app.route("/interface")
-def interface():
-	if not results:
-		return render_template('interface.html', recordingStatus=sharedState['recording']=='true')
-	else:
-		return '\n'.join(results)
-
-@app.route("/record/<status>")
-def record(status):
-	print status
-	sharedState['recording'] = status
-	if status == "true":
-		ut.print_success('Recording started')
-	else:
-		ut.print_success('Recording stopped')
-	return redirect(url_for('interface'))
-
+def advice():
+	results = analyze('squatData.txt')
+	output_advice = pt.get_advice('squat',results)
+	ut.print_success('Feedback retrieved')
+	advice_file = open('advice_file.txt','wb')
+	advice_file.write(output_advice)
 
 @app.route("/analyze_raw", methods=['POST'])
 def analyze_raw():
 	to_write = open('squatData.txt','wb')
 	to_write.write(request.data)
-	results = analyze('squatData.txt')
-	pt.get_advice('squat',results)
-
+	ut.print_success('Data written to file')
+	advice()
+	ut.print_success('Advice file populated')
 	return 'OK'
 
 if __name__ == '__main__':

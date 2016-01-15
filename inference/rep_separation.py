@@ -71,7 +71,8 @@ def separate_reps(data_file, exercise, key, column_labels, epsilon=0.15, gamma=2
 					line = [float(x.replace('\r\n','')) for x in line.split(',')]
 					data.append(line)
 				except Exception as e:
-					print e
+					continue
+					# print e
 
 
 		#=====[ Make dataframe and readjust indices to take into account front and back cuts  ]=====

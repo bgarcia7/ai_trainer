@@ -19,10 +19,10 @@ def get_advanced_feature_vector(reps, key, multiples):
         rep = get_states(rep,key,multiples)
 
         advanced_feature_vector['head_back'].append(head_in_line_with_back(rep, rightward))
-        advanced_feature_vector['back_straight'].append(back_straight(rep, rightward))
+        # advanced_feature_vector['back_straight'].append(back_straight(rep, rightward))
         advanced_feature_vector['knees_straight'].append(knees_straight(rep, rightward))
         advanced_feature_vector['elbow_angle'].append(elbow_angle(rep, rightward))
-        advanced_feature_vector['hands_aligned_chest'].append(hands_aligned_chest(rep, rightward))
+        # advanced_feature_vector['hands_aligned_chest'].append(hands_aligned_chest(rep, rightward))
 
     return advanced_feature_vector
 
@@ -130,7 +130,7 @@ def back_straight(states, rightward):
     #=====[ Gets average, variance, flat line offset, and first & last angles]=====
     features = avf(back_angles)
     
-    return np.concatenate([features,back_angles],axis=1)
+    return np.concatenate([features,back_angles],axis=0)
 
 def knees_straight(states, rightward):
     

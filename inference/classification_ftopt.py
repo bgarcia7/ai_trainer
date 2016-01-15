@@ -23,7 +23,7 @@ from collections import defaultdict
 def train_squat_classifiers(trainer):
 
 	#=====[ Load feature indicies  ]=====
-	feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indicies.p'),'rb'))
+	feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indices.p'),'rb'))
 
 	#=====[ Instantiates classifiers for each component of the squat  ]=====
 	classifiers = {'bend_hips_knees': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"), 'stance_width': linear_model.LogisticRegression(penalty='l1'),'squat_depth': linear_model.LogisticRegression(penalty='l1'),'knees_over_toes': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"),'back_hip_angle': linear_model.LogisticRegression()}
@@ -44,19 +44,20 @@ def train_squat_classifiers(trainer):
 
 def train_pushup_classifiers(trainer):
 
+	#=====[Load feature indicies  ]=====
+	feature_indices = pickle.load(open(os.path.join('../inference/','pushup_feature_indices.p'),'rb'))
+
 	#=====[ Instantiates classifiers for each component of the squat  ]=====
 	classifiers = {'head_back': linear_model.LogisticRegression(penalty='l1',C=5), 'knees_straight': linear_model.LogisticRegression(penalty='l1', C=8),'elbow_angle': linear_model.LogisticRegression(penalty='l1', C=8)}
 
 	#=====[ Retreives relevant training data for each classifier  ]=====
 	X3, Y, file_names  = trainer.extract_pu_features(multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95])
-	X4, Y, file_names = trainer.extract_pu_features(multiples=[float(x)/100 for x in range(100)])
 	X30 = np.concatenate([X3[x] for x in X3],axis=1)
-	X40 = np.concatenate([X4[x] for x in X4],axis=1)
 
 	#=====[ Trains each classifier  ]=====
-	classifiers['head_back'].fit(X40, Y['head_back'])
-	classifiers['knees_straight'].fit(X30, Y['knees_straight'])
-	classifiers['elbow_angle'].fit(X3['elbow_angle'], Y['elbow_angle'])
+	classifiers['head_back'].fit(X30[:,feature_indices['head_back']], Y['head_back'])
+	classifiers['knees_straight'].fit(X30[:,feature_indices['knees_straight']], Y['knees_straight'])
+	classifiers['elbow_angle'].fit(X30[:,feature_indices['elbow_angle']], Y['elbow_angle'])
 
 	return classifiers
 

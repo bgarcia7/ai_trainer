@@ -40,10 +40,11 @@ def advice(exercise, results):
 	# print_problems(major_problems, messages, categories, 'Major')
 	# print_problems(minor_problems, messages, categories, 'Minor')
 	# print_strengths(strengths, messages, categories)
-	advice = 'A total of ' + str(num_reps) + ' were analyzed'
-	advice += get_problems(major_problems, messages, categories, 'Major') + '\n'
-	advice += get_problems(minor_problems, messages, categories, 'Minor') + '\n'
-	advice += get_strengths(strengths, messages, categories)
+	advice = []
+	advice.append('A total of ' + str(num_reps) + ' reps were analyzed')
+	advice.append(get_problems(major_problems, messages, categories, 'Major'))
+	advice.append(get_problems(minor_problems, messages, categories, 'Minor'))
+	advice.append(get_strengths(strengths, messages, categories))
 	return advice 
 	
 def get_problems(problems, messages, categories, problem_type):

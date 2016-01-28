@@ -9,6 +9,10 @@ from collections import defaultdict
 
 sys.path.append('data')
 sys.path.append('inference')
+sys.path.append('feedback')
+sys.path.append('../inference')
+sys.path.append('../data')
+sys.path.append('../feedback')
 
 #=====[ Import our utils  ]=====
 import rep_separation as rs
@@ -23,12 +27,19 @@ import label_columns as feature_names
 
 class Personal_Trainer:
 
-	def __init__(self, keys):
+	def __init__(self, keys, auto_start=False):
 		self.keys = keys
 		self.reps = defaultdict(list)
 		self.labels = defaultdict(list)
 		self.file_names = defaultdict(list)
 		self.classifiers = {}
+
+		#=====[ Rehydrate classifiers if auto_start enabled  ]=====
+		if auto_start:
+			if 'squat' in keys:
+				self.classifiers['squat'] = pickle.load(open(os.path.join('../inference/','squat_classifiers_ftopt.p'),'rb'))
+			if 'pushup' in keys:
+				self.classifiers['pushup'] = pickle.load(open(os.path.join('../inference/','pushup_classifiers_ftopt.p'),'rb'))
 
 	#=====[ Loads a pickled file and stores squat values  ]=====
 	def load_reps(self, exercise, file):
@@ -39,12 +50,39 @@ class Personal_Trainer:
 
 
 	#=====[ Does basic preprocessing for squats from data source: squat separation, normalization, etc. ]=====
-	def analyze_reps(self, exercise, data_file, labels=None, epsilon=0.15, gamma=20, delta=0.5, beta=1):
+	def analyze_reps(self, exercise, data_file, labels=None, epsilon=0.15, gamma=20, delta=0.5, beta=1, auto_analyze=False, verbose=False):
 
 		reps = [rep for rep in rs.separate_reps(data_file, exercise, self.keys[exercise], keysXYZ.columns)]
-		ut.print_success('Reps segmented and normalized for ' + exercise)
+		
+		if verbose:
+			ut.print_success('Reps segmented and normalized for ' + exercise)
 
-		return reps
+		if not auto_analyze:
+			return reps
+		
+		#=====[ Get feature vector  ]=====
+		feature_vectors = self.get_prediction_features_opt(exercise, reps, verbose)
+		
+		#=====[ Get results for classifications and populate dictionary  ]=====
+		results = {}
+
+		if verbose:
+			print "\n\n###################################################################"
+			print "######################## Classification ###########################"
+			print "###################################################################\n\n"
+
+		for key in feature_vectors:
+		    X = feature_vectors[key]
+		    classification = self.classify(exercise, key, X, verbose)
+		    results[key] = classification
+		    if verbose:
+		    	print '\n\n', key ,':\n', classification, '\n'
+
+		#=====[ Print advice based on results  ]=====
+		print "\n\n###################################################################"
+		print "########################### Feedback ##############################"
+		print "###################################################################\n\n"
+		self.get_advice(exercise, results)
 
 	#=====[ Adds reps to personal trainer's list of squats  ]=====
 	def add_reps(self, exercise, reps):
@@ -69,14 +107,16 @@ class Personal_Trainer:
 
 
 	#=====[ Classies an example based on a specified key  ]=====
-	def classify(self, exercise, key, X):
+	def classify(self, exercise, key, X, verbose=False):
 		
 		try:
 			prediction = self.classifiers[exercise][key].predict(X)
-			ut.print_success(key + ': reps classified')
+			if verbose:
+				ut.print_success(key + ': reps classified')
 			return prediction
 			
-		except:
+		except Exception as e:
+			print e
 			ut.print_failure(key + ': reps not classified')
 			return None
 		
@@ -84,7 +124,8 @@ class Personal_Trainer:
 		return self.classifiers[exercise]
 
 	def get_advice(self, exercise, results):
-		return advice.advice(exercise, results)
+		for message in advice.advice(exercise, results):
+			print message
 
 	#=====[ Gets feature vectors for prediction of data  ]=====
 	def get_prediction_features(self, exercise, reps):
@@ -122,12 +163,12 @@ class Personal_Trainer:
 
 		return X
 
-	def get_prediction_features_opt(self, exercise, reps):
+	def get_prediction_features_opt(self, exercise, reps, verbose=False):
 			
 		if exercise is 'squat':
 
 			#=====[ Load feature indicies  ]=====
-			feature_indices = pickle.load(open(os.path.join('inference/','squat_feature_indicies.p'),'rb'))
+			feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indices.p'),'rb'))
 
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names = self.extract_advanced_features(reps=reps, multiples=[float(x)/20 for x in range(1,20)],predict=True)
@@ -142,21 +183,23 @@ class Personal_Trainer:
 			X['back_hip_angle'] = X30[:,feature_indices['back_hip_angle']]
 
 		elif exercise is 'pushup':
+
+			#=====[ Load feature indicies  ]=====
+			feature_indices = pickle.load(open(os.path.join('../inference/','pushup_feature_indices.p'),'rb'))
+
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names  = self.extract_pu_features(reps=reps, multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95], predict=True)
-			X4, Y, file_names = self.extract_pu_features(reps=reps, multiples=[float(x)/100 for x in range(100)], predict=True)
-
 			X30 = np.concatenate([X3[x] for x in X3],axis=1)
-			X40 = np.concatenate([X4[x] for x in X4],axis=1)
 
 			#=====[ Sets up dictionary of feature vectors  ]=====
 			X = {}
-			X['head_back'] = preprocessing.StandardScaler().fit_transform(X40)
-			X['knees_straight'] = preprocessing.StandardScaler().fit_transform(X30)
-			X['elbow_angle'] = preprocessing.StandardScaler().fit_transform(X3['elbow_angle'])
+			X['head_back'] = X30[:,feature_indices['head_back']]
+			X['knees_straight'] = X30[:,feature_indices['knees_straight']]
+			X['elbow_angle'] = X30[:,feature_indices['elbow_angle']]
 
 
-		ut.print_success('Features extracted for ' + exercise)
+		if verbose:
+			ut.print_success('Features extracted for ' + exercise)
 
 		return X
 

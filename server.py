@@ -25,7 +25,7 @@ from flask import flash
 base_dir = os.path.split(os.path.realpath(__file__))[0]
 static_dir = os.path.join(base_dir, 'static')
 app = Flask(__name__, static_folder=static_dir)
-results = []
+results = None
 
 #=====[ Squat Inference Setup ]=====
 pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'}, auto_start=True)
@@ -34,53 +34,25 @@ pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'}, auto_start=True)
 ####################[ HANDLING REQUESTS ]#######################################
 ################################################################################
 
-@app.route("/", methods=['GET'])
-def home():
-	return "Hi"
-
-@app.route("/analyze/<file_name>")
-def analyze(file_name):
-	
-	
-	#=====[ Analyze squat data to pull out normalized, spliced reps ]=====
-	squats = pt.analyze_reps('squat', file_name)
-	
-	#=====[ Extract feature vectors from squats for each exercise componenet  ]=====
-	squat_feature_vectors = pt.get_prediction_features_opt('squat',squats)
-	
-	results = {}
-	#=====[ Run classification on each squat component and report results  ]=====
-	for key in squat_feature_vectors:
-	    X = squat_feature_vectors[key]
-	    classification = pt.classify('squat', key, X)
-	    results[key] = classification
-		
+@app.route("/get_results", methods=['GET'])
+def get_results():
 	return results
-
-def advice():
-	results = analyze('squatData.txt')
-	output_advice = pt.get_advice('squat',results)
-	ut.print_success('Feedback retrieved')
-	advice_file = open('advice_file.txt','wb')
-	advice_file.write(output_advice)
-	advice_file.close()
-
-
-@app.route("/get_advice", methods=['GET'])
-def get_advice():
-	advice_file = open('advice_file.txt','wb')
-	return advice_file.read()
 
 @app.route("/analyze_raw", methods=['POST'])
 def analyze_raw():
-	to_write = open('squatData.txt','wb')
+	
+	file_name = 'squatData.txt'
+	#=====[ Load json data ]=====
 	data = json.loads(request.data)
 
+	#=====[ Write coordinate data to file ]=====
+	to_write = open(file_name,'wb')
 	to_write.write(data['data'])
 	to_write.close()
-	# ut.print_success('Data written to file')
-	# advice()
-	# ut.print_success('Advice file populated')
+
+	#=====[ Analyze Reps ]=====
+	results = pt.analyze_reps('squats',file_name,auto_analyze=True,verbose=False)
+	
 	return 'OK'
 
 if __name__ == '__main__':

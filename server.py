@@ -78,7 +78,7 @@ def analyze_raw():
 	# ut.print_success('Data written to file')
 	# advice()
 	# ut.print_success('Advice file populated')
-	return 201
+	return 'OK'
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0')

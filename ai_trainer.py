@@ -10,9 +10,11 @@ from collections import defaultdict
 sys.path.append('data')
 sys.path.append('inference')
 sys.path.append('feedback')
-sys.path.append('../inference')
-sys.path.append('../data')
-sys.path.append('../feedback')
+
+#=====[Preppend ../ for notebook]=====
+sys.path.append('inference')
+sys.path.append('data')
+sys.path.append('feedback')
 
 #=====[ Import our utils  ]=====
 import rep_separation as rs
@@ -37,9 +39,9 @@ class Personal_Trainer:
 		#=====[ Rehydrate classifiers if auto_start enabled  ]=====
 		if auto_start:
 			if 'squat' in keys:
-				self.classifiers['squat'] = pickle.load(open(os.path.join('../inference/','squat_classifiers_ftopt.p'),'rb'))
+				self.classifiers['squat'] = pickle.load(open(os.path.join('inference/','squat_classifiers_ftopt.p'),'rb'))
 			if 'pushup' in keys:
-				self.classifiers['pushup'] = pickle.load(open(os.path.join('../inference/','pushup_classifiers_ftopt.p'),'rb'))
+				self.classifiers['pushup'] = pickle.load(open(os.path.join('inference/','pushup_classifiers_ftopt.p'),'rb'))
 
 	#=====[ Loads a pickled file and stores squat values  ]=====
 	def load_reps(self, exercise, file):
@@ -82,7 +84,7 @@ class Personal_Trainer:
 		print "\n\n###################################################################"
 		print "########################### Feedback ##############################"
 		print "###################################################################\n\n"
-		self.get_advice(exercise, results)
+		return self.get_advice(exercise, results)
 
 	#=====[ Adds reps to personal trainer's list of squats  ]=====
 	def add_reps(self, exercise, reps):
@@ -124,8 +126,11 @@ class Personal_Trainer:
 		return self.classifiers[exercise]
 
 	def get_advice(self, exercise, results):
+		to_return = ""
 		for message in advice.advice(exercise, results):
 			print message
+			to_return += message + '\n'
+		return to_return
 
 	#=====[ Gets feature vectors for prediction of data  ]=====
 	def get_prediction_features(self, exercise, reps):
@@ -168,7 +173,7 @@ class Personal_Trainer:
 		if exercise is 'squat':
 
 			#=====[ Load feature indicies  ]=====
-			feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indices.p'),'rb'))
+			feature_indices = pickle.load(open(os.path.join('inference/','squat_feature_indices.p'),'rb'))
 
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names = self.extract_advanced_features(reps=reps, multiples=[float(x)/20 for x in range(1,20)],predict=True)
@@ -185,7 +190,7 @@ class Personal_Trainer:
 		elif exercise is 'pushup':
 
 			#=====[ Load feature indicies  ]=====
-			feature_indices = pickle.load(open(os.path.join('../inference/','pushup_feature_indices.p'),'rb'))
+			feature_indices = pickle.load(open(os.path.join('inference/','pushup_feature_indices.p'),'rb'))
 
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names  = self.extract_pu_features(reps=reps, multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95], predict=True)

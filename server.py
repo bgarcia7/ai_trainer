@@ -27,33 +27,15 @@ app = Flask(__name__, static_folder=static_dir)
 results = []
 
 #=====[ Squat Inference Setup ]=====
-pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'})
-
-try:
-	#=====[ Get classifiers from pickled file ]=====
-	squat_classifiers = pickle.load(open(os.path.join('inference/','squat_classifiers_ftopt.p'),'rb'))
-	pushup_classifiers = pickle.load(open(os.path.join('inference/','pushup_classifiers_ftopt.p'),'rb'))
-	
-	ut.print_success('Loaded trained classifiers')
-	try:
-		#=====[ Set classifiers for our trainer ]=====
-		pt.set_classifiers('squat',squat_classifiers)
-		pt.set_classifiers('pushup',pushup_classifiers)
-
-		ut.print_success('Saved classifiers')
-	
-	except Exception as e:
-		ut.print_failure('Could not save classifiers: ' + str(e))
-except Exception as e:
-	ut.print_failure('Could not load classifiers:' + str(e))
+pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'}, auto_start=True)
 
 ################################################################################
 ####################[ HANDLING REQUESTS ]#######################################
 ################################################################################
 
-@app.route("/")
+@app.route("/", methods=['GET'])
 def home():
-	return pt.get_classifiers()
+	return "Hi"
 
 @app.route("/analyze/<file_name>")
 def analyze(file_name):
@@ -80,15 +62,23 @@ def advice():
 	ut.print_success('Feedback retrieved')
 	advice_file = open('advice_file.txt','wb')
 	advice_file.write(output_advice)
+	advice_file.close()
+
+
+@app.route("/get_advice", methods=['GET'])
+def get_advice():
+	advice_file = open('advice_file.txt','wb')
+	return advice_file.read()
 
 @app.route("/analyze_raw", methods=['POST'])
 def analyze_raw():
-	# to_write = open('squatData.txt','wb')
+	to_write = open('squatData.txt','wb')
+	print request.data
 	# to_write.write(request.data)
 	# ut.print_success('Data written to file')
 	# advice()
 	# ut.print_success('Advice file populated')
-	return 'OK'
+	return 201
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0')

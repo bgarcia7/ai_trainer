@@ -10,8 +10,8 @@ with open("data/raw_data/squat_pushupData_10to20/squatData13.txt") as data_file:
 
 data = urllib.urlencode({'data': values})
 
-print data
 req = urllib2.Request(url, data)
 
 response = urllib2.urlopen(req)
 the_page = response.read()
+print the_page

@@ -73,8 +73,8 @@ def get_advice():
 @app.route("/analyze_raw", methods=['POST'])
 def analyze_raw():
 	to_write = open('squatData.txt','wb')
-	print request.data
-	# to_write.write(request.data)
+	to_write.write(request.data)
+	to_write.close()
 	# ut.print_success('Data written to file')
 	# advice()
 	# ut.print_success('Advice file populated')

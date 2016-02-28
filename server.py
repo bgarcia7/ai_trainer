@@ -7,6 +7,7 @@ sys.path.append('inference')
 from ai_trainer import Personal_Trainer
 import classification_ftopt
 import utils as ut
+import json
 
 #=====[ Flask ]=====
 from flask import Flask
@@ -73,7 +74,9 @@ def get_advice():
 @app.route("/analyze_raw", methods=['POST'])
 def analyze_raw():
 	to_write = open('squatData.txt','wb')
-	to_write.write(request.data)
+	data = json.loads(request.data)
+
+	to_write.write(data['data'])
 	to_write.close()
 	# ut.print_success('Data written to file')
 	# advice()

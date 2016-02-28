@@ -38,28 +38,24 @@ pt = Personal_Trainer({'squat':'NeckY','pushup':'NeckY'}, auto_start=True)
 def get_results():
 	return results
 
-@app.route("/analyze_raw/", methods=['POST'])
-def analyze_raw():
-	
-	file_name = 'squatData.txt'
-	#=====[ Load json data ]=====	
+@app.route("/analyze_raw/<file_name>", methods=['POST'])
+def analyze_raw(file_name):
 
-	print "Getting data from request"
+	#=====[ Load json data ]=====
 	data = request.get_data()
-	print data
+
 	#=====[ Write coordinate data to file ]=====
 	to_write = open(file_name,'wb')
-	print "writing data to file"
 	to_write.write(data)
 	to_write.close()
 
 	#=====[ Analyze Reps ]=====
-	print "getting results"
 	try:
 		results = pt.analyze_reps('squat',file_name,auto_analyze=True,verbose=False)
 	except Exception as e:
-		print e
-	print results
+		print e 
+		results = ''
+
 	return results
 
 if __name__ == '__main__':

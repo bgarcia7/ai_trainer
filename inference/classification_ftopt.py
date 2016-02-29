@@ -23,7 +23,7 @@ from collections import defaultdict
 def train_squat_classifiers(trainer):
 
 	#=====[ Load feature indicies  ]=====
-	feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indices.p'),'rb'))
+	feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indices_25.p'),'rb'))
 
 	#=====[ Instantiates classifiers for each component of the squat  ]=====
 	classifiers = {'bend_hips_knees': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"), 'stance_width': linear_model.LogisticRegression(penalty='l1'),'squat_depth': linear_model.LogisticRegression(penalty='l1'),'knees_over_toes': tree.DecisionTreeClassifier(max_depth=3, criterion="entropy"),'back_hip_angle': linear_model.LogisticRegression()}

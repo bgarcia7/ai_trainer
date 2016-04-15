@@ -11,6 +11,11 @@ sys.path.append('data')
 sys.path.append('inference')
 sys.path.append('feedback')
 
+#=====[Preppend ../ for notebook]=====
+sys.path.append('../inference')
+sys.path.append('../data')
+sys.path.append('../feedback')
+
 #=====[ Import our utils  ]=====
 import rep_separation as rs
 import featurizer as fz
@@ -34,9 +39,9 @@ class Personal_Trainer:
 		#=====[ Rehydrate classifiers if auto_start enabled  ]=====
 		if auto_start:
 			if 'squat' in keys:
-				self.classifiers['squat'] = pickle.load(open(os.path.join('inference/','squat_classifiers_ftopt.p'),'rb'))
+				self.classifiers['squat'] = pickle.load(open(os.path.join('../inference/','squat_classifiers_ftopt.p'),'rb'))
 			if 'pushup' in keys:
-				self.classifiers['pushup'] = pickle.load(open(os.path.join('inference/','pushup_classifiers_ftopt.p'),'rb'))
+				self.classifiers['pushup'] = pickle.load(open(os.path.join('../inference/','pushup_classifiers_ftopt.p'),'rb'))
 
 	#=====[ Loads a pickled file and stores squat values  ]=====
 	def load_reps(self, exercise, file):
@@ -117,62 +122,15 @@ class Personal_Trainer:
 			ut.print_failure(key + ': reps not classified')
 			return None
 		
-	#=====[ Returns classifiers ]=====
 	def get_classifiers(self, exercise):
 		return self.classifiers[exercise]
 
-	#=====[ Returns advice given an exercise and specific results for a set ]=====
 	def get_advice(self, exercise, results):
-		advice_message = ""
-
-		#=====[ Gets all advice corresponding to results ]=====
+		to_return = ""
 		for message in advice.advice(exercise, results):
 			print message
-			advice += message + '\n'
-
-		return advice_message
-
-	########################################################################################################################################################
-	###################################################### Train-time feature extraction ###################################################################
-	########################################################################################################################################################
-
-	#=====[ Extracts advanced features from pushups and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
-	def extract_pu_features(self, multiples=[0.5], reps=None, labels=None, toIgnore=[], predict=False):
-
-		#=====[ If no set of squats passed in to extract features from, extracts features from self.reps  ]=====
-		if reps is None:
-			reps = self.reps['pushup']
-			labels = self.labels['pushup']
-
-		#=====[ Get Feature Vector ]=====
-		advanced_feature_vector = pfz.get_advanced_feature_vector(reps,self.keys['pushup'],multiples)
-
-		#=====[ Set data to have 0 mean and unit variance  ]=====
-		X, Y = fz.transform_data(advanced_feature_vector, labels, toIgnore, predict)		
-		
-		return X, Y, self.file_names['pushup']	
-
-	#=====[ Extracts advanced features from squats and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
-	def extract_advanced_features(self, multiples=[0.5], reps=None, labels=None, toIgnore=[], predict=False):
-
-		#=====[ If no set of squats passed in to extract features from, extracts features from self.reps  ]=====
-		if reps is None:
-			reps = self.reps['squat']
-			labels = self.labels['squat']
-
-		#=====[ Get Feature Vector ]=====
-		advanced_feature_vector = fz.get_advanced_feature_vector(reps,self.keys['squat'],multiples)
-
-		#=====[ Set data to have 0 mean and unit variance  ]=====
-		X, Y = fz.transform_data(advanced_feature_vector, labels, toIgnore, predict)		
-		
-		return X, Y, self.file_names['squat']	
-
-
-	########################################################################################################################################################
-	###################################################### Test-time feature extraction ###################################################################
-	########################################################################################################################################################
-
+			to_return += message + '\n'
+		return to_return
 
 	#=====[ Gets feature vectors for prediction of data  ]=====
 	def get_prediction_features(self, exercise, reps):
@@ -210,13 +168,12 @@ class Personal_Trainer:
 
 		return X
 
-	#=====[ Returns features for prediction from a rep using forward search optimized features ]=====
 	def get_prediction_features_opt(self, exercise, reps, verbose=False):
 			
 		if exercise is 'squat':
 
 			#=====[ Load feature indicies  ]=====
-			feature_indices = pickle.load(open(os.path.join('inference/','squat_feature_indices.p'),'rb'))
+			feature_indices = pickle.load(open(os.path.join('../inference/','squat_feature_indices.p'),'rb'))
 
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names = self.extract_advanced_features(reps=reps, multiples=[float(x)/20 for x in range(1,20)],predict=True)
@@ -233,7 +190,7 @@ class Personal_Trainer:
 		elif exercise is 'pushup':
 
 			#=====[ Load feature indicies  ]=====
-			feature_indices = pickle.load(open(os.path.join('inference/','pushup_feature_indices.p'),'rb'))
+			feature_indices = pickle.load(open(os.path.join('../inference/','pushup_feature_indices.p'),'rb'))
 
 			#=====[ Retreives relevant training data for each classifier  ]=====
 			X3, Y, file_names  = self.extract_pu_features(reps=reps, multiples=[0.05, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95], predict=True)
@@ -253,5 +210,36 @@ class Personal_Trainer:
 
 
 
+	#=====[ Extracts advanced features from pushups and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
+	def extract_pu_features(self, multiples=[0.5], reps=None, labels=None, toIgnore=[], predict=False):
+
+		#=====[ If no set of squats passed in to extract features from, extracts features from self.reps  ]=====
+		if reps is None:
+			reps = self.reps['pushup']
+			labels = self.labels['pushup']
+
+		#=====[ Get Feature Vector ]=====
+		advanced_feature_vector = pfz.get_advanced_feature_vector(reps,self.keys['pushup'],multiples)
+
+		#=====[ Set data to have 0 mean and unit variance  ]=====
+		X, Y = fz.transform_data(advanced_feature_vector, labels, toIgnore, predict)		
+		
+		return X, Y, self.file_names['pushup']	
+
+	#=====[ Extracts advanced features from squats and prepares X, a dictionary of mxn matrices with m squats and n features per squat for each of various keys  ]=====
+	def extract_advanced_features(self, multiples=[0.5], reps=None, labels=None, toIgnore=[], predict=False):
+
+		#=====[ If no set of squats passed in to extract features from, extracts features from self.reps  ]=====
+		if reps is None:
+			reps = self.reps['squat']
+			labels = self.labels['squat']
+
+		#=====[ Get Feature Vector ]=====
+		advanced_feature_vector = fz.get_advanced_feature_vector(reps,self.keys['squat'],multiples)
+
+		#=====[ Set data to have 0 mean and unit variance  ]=====
+		X, Y = fz.transform_data(advanced_feature_vector, labels, toIgnore, predict)		
+		
+		return X, Y, self.file_names['squat']	
 
 
